@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es-BO">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Ingreso del equipo · TRIP</title>
+<link rel="icon" href="/assets/trip-logo.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/cuenta.css">
+<script type="module" src="/admin-login.js"></script>
+</head>
+<body><header class="top"><div class="wrap nav"><a class="brand" href="/" aria-label="Inicio"><img src="/assets/trip-logo.png" width="68" alt="TRIP"></a><a href="/">Volver al inicio →</a></div></header>
+<main class="wrap account-shell"><p class="eyebrow">TRIP / EQUIPO AUTORIZADO</p><h1>INGRESO DEL EQUIPO<span>.</span></h1>
+<p id="admin-access-status" role="status">Ingresa tus credenciales para abrir el panel.</p>
+<section class="account-panel">
+<form class="form-grid" id="staff-login">
+<label>Usuario<input name="login" autocomplete="username" maxlength="40" required></label>
+<label>Contraseña<input name="password" type="password" autocomplete="current-password" maxlength="128" required></label>
+<button type="submit" class="button solid">Entrar al panel</button>
+</form>
+<form class="form-grid" id="staff-change" hidden>
+<h2>Cambia tu contraseña temporal</h2>
+<label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="14" maxlength="128" required></label>
+<label>Confirmar contraseña<input name="confirmation" type="password" autocomplete="new-password" minlength="14" maxlength="128" required></label>
+<button type="submit" class="button solid">Guardar y entrar</button>
+</form>
+</section></main></body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es-BO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#100e15">
+<meta name="description" content="TRIP Cochabamba. Cartelera, videos y reservas de lounges para Festi Cumbia y Rodeó Fest, el 13 y 14 de noviembre.">
+<link rel="icon" href="/assets/trip-logo.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/mapa.css">
+<script type="module" src="/app.js"></script>
+<title>TRIP Cochabamba · La noche es TRIP</title>
+</head>
+<body>
+<a class="skip" href="#cartelera">Saltar a la cartelera</a>
+<header class="top" id="inicio">
+  <div class="wrap nav">
+    <a class="brand" href="#inicio" aria-label="TRIP Cochabamba, inicio"><img src="/assets/trip-logo.png" width="68" height="47" alt="TRIP"><span>COCHABAMBA<br>BO</span></a>
+    <nav aria-label="Principal">
+      <a href="#cartelera">Cartelera</a><a href="#lounges">Lounges</a><a href="#videos">Videos</a><a href="#ubicacion">Ubicación</a>
+    </nav>
+    <a class="button solid compact" href="#lounges">Reservar <span aria-hidden="true">→</span></a>
+  </div>
+</header>
+<main>
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-media" aria-hidden="true"><div class="hero-crowd"></div><div class="hero-stage"></div></div>
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow hero-kicker"><span class="live-dot"></span> COCHABAMBA · FIN DE SEMANA EN VIVO</p>
+      <h1 id="hero-title">LA NOCHE<br><em>ES TRIP<span>.</span></em></h1>
+      <p class="intro">Dos noches, un solo lugar. Cumbia en vivo el viernes y Rodeó Fest con Luis Vega el sábado.</p>
+      <div class="actions"><a class="button solid" href="#cartelera">Ver la cartelera <span aria-hidden="true">↓</span></a><a class="button ghost" href="#lounges">Reservar lounge <span aria-hidden="true">→</span></a></div>
+    </div>
+    <div class="hero-date" aria-label="13 y 14 de noviembre de 2026"><b>13<span>/</span>14</b><small>NOVIEMBRE 2026</small></div>
+    <a class="hero-video" href="#videos"><span aria-hidden="true">▶</span> VER VIDEOS</a>
+  </div>
+</section>
+<div class="signal" aria-hidden="true"><div class="wrap signal-inner"><span>✳</span> MÚSICA EN VIVO <span>✳</span> LOUNGES <span>✳</span> FIESTAS TEMÁTICAS <span>✳</span> COCHABAMBA, BO <span>✳</span></div></div>
+
+<section class="section wrap" id="cartelera">
+  <div class="heading"><div><p class="eyebrow">01 / CARTELERA</p><h2>PRÓXIMAS NOCHES<span>.</span></h2></div><p>13 y 14 de noviembre <br>Puertas desde las 20:00 h</p></div>
+  <div class="event-grid">
+    <article class="event friday">
+      <div class="event-art"><img src="/assets/explosion-cumbiera.webp" alt="Flyer Festi Cumbia con Explosión Cumbiera" width="880" height="1100" loading="lazy"><div class="event-date"><b>13</b><span>VIE · NOV</span></div></div>
+      <div class="event-body"><span class="tag">CUMBIA EN VIVO</span><h3>FESTI CUMBIA <small>VOL. 1</small></h3><p>Explosión Cumbiera · Hijos de la Noche · Amor y Miel</p><div class="event-bottom"><div><span>PREVENTA</span><strong>60 Bs</strong></div><button type="button" class="button ghost" data-night="viernes">Ver lounges <span aria-hidden="true">→</span></button></div></div>
+    </article>
+    <article class="event saturday">
+      <div class="event-art"><img src="/assets/rodeo.webp" alt="Flyer Rodeó Fest con Luis Vega" width="880" height="1100" loading="lazy"><div class="event-date"><b>14</b><span>SÁB · NOV</span></div></div>
+      <div class="event-body"><span class="tag">TORO MECÁNICO</span><h3>RODEÓ FEST</h3><p>Luis Vega · DJ Saiko · Grupo sorpresa</p><div class="event-bottom"><div><span>PREVENTA</span><strong>80 Bs</strong></div><button type="button" class="button ghost" data-night="sabado">Ver lounges <span aria-hidden="true">→</span></button></div></div>
+    </article>
+  </div>
+</section>
+
+<section class="section lounge-section" id="lounges">
+  <div class="wrap">
+    <div class="heading"><div><p class="eyebrow">02 / RESERVAS</p><h2>ELIGE TU LOUNGE<span>.</span></h2></div><p>Elige tu mesa en el plano y revisa el precio de su zona.</p></div>
+    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="/login.html">Ingresar o crear cuenta</a><a class="button ghost" href="/mis-reservas.html">Mis reservas <span aria-hidden="true">→</span></a></div></div>
+    <div id="lounge-panel" role="tabpanel" aria-labelledby="tab-viernes" tabindex="0">
+      <p id="lounge-note"></p>
+      <section id="mapa" class="venue-map" aria-labelledby="map-title">
+        <div class="map-header"><div><p class="eyebrow" id="map-kicker">PLANO DE MESAS</p><h3 id="map-title">TU LUGAR EN TRIP</h3></div><a href="/admin#mapa" class="button ghost" id="map-admin" hidden>Administrar mapa</a></div>
+        <p id="map-notice" role="status" hidden></p>
+        <div class="map-legend" id="map-zones" aria-label="Zonas"></div>
+        <div class="map-state-legend"><span><i class="state-free"></i> Disponible</span><span><img src="/assets/trip-logo.png" alt=""> Reservada</span><span><i class="state-blocked"></i> Bloqueada</span></div>
+        <div class="map-layout">
+          <div class="map-scroll" tabindex="0" aria-label="Plano del local, desplázate lateralmente si es necesario">
+            <div class="seat-plan" id="seat-plan">
+              <div class="stage-block" aria-hidden="true">ESCENARIO</div><div class="bar-block" aria-hidden="true">BARRA</div><div class="door-block" aria-hidden="true">↑ INGRESO</div>
+            </div>
+          </div>
+          <aside class="map-sidebar" aria-label="Selección de mesa">
+            <label class="table-picker">Ir a la mesa <select id="table-picker"><option value="">Seleccionar número</option></select></label>
+            <div id="map-selection"></div>
+            <button type="button" class="button ghost map-reload" id="map-reload">Actualizar disponibilidad</button>
+            <button type="button" id="map-button" class="map-reference">Ver el flyer del plano</button>
+          </aside>
+        </div>
+      </section>
+      <details class="flyers map-prices"><summary>Comparar zonas y precios</summary><div class="lounge-grid" id="lounge-grid"></div></details>
+    </div>
+    <article class="birthday"><div class="birthday-mark" aria-hidden="true">✷</div><div><p class="eyebrow">EN TU CUMPLE, TRIP TE CELEBRA</p><h3>PAQUETE CUMPLEAÑERO</h3><details><summary>Ver qué incluye</summary><ul id="birthday-includes"></ul></details></div><div class="birthday-book"><strong id="birthday-price"></strong><button class="button solid" id="birthday-book" type="button">Consultar paquete <span aria-hidden="true">→</span></button></div></article>
+    <noscript><p>Consulta precios y disponibilidad de lounges al 70785815. <a href="https://wa.me/59170785815">Escribir a TRIP</a></p></noscript>
+  </div>
+</section>
+
+<section class="section wrap" id="videos">
+  <div class="heading"><div><p class="eyebrow">03 / VIDEOS</p><h2>TRIP EN ESCENA<span>.</span></h2></div><a class="text-link" href="https://www.facebook.com/781249241729781/" target="_blank" rel="noopener noreferrer">TRIP en Facebook →</a></div>
+  <div class="video-grid">
+    <button type="button" class="clip" data-video="luis-vega" data-title="Luis Vega en TRIP"><img src="/assets/luis-vega.webp" alt="" loading="lazy"><span class="play" aria-hidden="true">▶</span><span class="clip-caption"><small>01 / EN VIVO</small><b>Luis Vega en TRIP</b></span><span class="duration">0:36</span></button>
+    <button type="button" class="clip" data-video="teaser" data-title="Teaser del 14 de noviembre"><img src="/assets/teaser.webp" alt="" loading="lazy"><span class="play" aria-hidden="true">▶</span><span class="clip-caption"><small>02 / TEASER</small><b>14 de noviembre</b></span><span class="duration">0:13</span></button>
+  </div>
+  <details class="flyers"><summary>Ver más flyers del fin de semana</summary><div class="flyer-grid">
+    <button type="button" data-flyer="cumbia" data-title="Flyer de Festi Cumbia"><img src="/assets/cumbia.webp" alt="Flyer de Festi Cumbia" loading="lazy"></button>
+    <button type="button" data-flyer="hijos-de-la-noche" data-title="Hijos de la Noche"><img src="/assets/hijos-de-la-noche.webp" alt="Flyer de Hijos de la Noche" loading="lazy"></button>
+    <button type="button" data-flyer="amor-y-miel" data-title="Amor y Miel"><img src="/assets/amor-y-miel.webp" alt="Flyer de Amor y Miel" loading="lazy"></button>
+    <button type="button" data-flyer="toro" data-title="Toro mecánico en Rodeó Fest"><img src="/assets/toro.webp" alt="Flyer del toro mecánico" loading="lazy"></button>
+  </div></details>
+</section>
+
+<section class="visit" id="ubicacion">
+  <div class="wrap visit-inner"><div><p class="eyebrow">04 / CÓMO LLEGAR</p><h2>NOS VEMOS<br>EN TRIP<span>.</span></h2></div><div class="address"><p><strong>Avenida Portales</strong><br>Entre av. Pando y av. Melchor Urquidi,<br>frente al parqueo del Hupermall.<br>Cochabamba, Bolivia.</p><div class="actions"><a class="button solid" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=Trip+Bar+Avenida+Portales+Hupermall+Cochabamba">Abrir mapa →</a><a class="button ghost" target="_blank" rel="noopener noreferrer" href="https://wa.me/59170785815?text=Quiero%20reservar%20para%20TRIP">WhatsApp →</a></div></div></div>
+</section>
+</main>
+<footer class="wrap footer"><a class="brand" href="#inicio"><img src="/assets/trip-logo.png" alt="TRIP" width="58" height="40"></a><span>TRIP · COCHABAMBA, BOLIVIA</span><a href="tel:+59170785815">+591 70785815</a><a href="/admin-login.html">Administración</a></footer>
+<dialog id="modal" aria-labelledby="modal-title"><div class="modal-inner"><div class="modal-head"><h2 id="modal-title"></h2><button type="button" class="close" aria-label="Cerrar">×</button></div><div id="modal-content"></div></div></dialog>
+</body>
+</html>

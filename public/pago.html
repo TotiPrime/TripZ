@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es-BO"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><title>Estado de tu reserva · TRIP</title><link rel="icon" href="/assets/trip-logo.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/cuenta.css"><script type="module" src="/pago.js"></script></head>
+<body><header class="top"><div class="wrap nav"><a class="brand" href="/" aria-label="Volver al inicio"><img src="/assets/trip-logo.png" alt="TRIP" width="68"></a><a href="/#lounges">Ver lounges →</a><a href="/mis-reservas.html">Mis reservas →</a></div></header>
+<main class="wrap payment-shell">
+<p class="eyebrow">TRIP / RESERVA</p><h1>TU RESERVA<span>.</span></h1>
+<p class="payment-status" id="payment-status" role="status">Cargando tu reserva…</p>
+<ol class="booking-steps" id="booking-steps" aria-label="Etapas de la reserva" hidden><li>1. Solicitud</li><li>2. Confirmación</li><li>3. Recibo</li></ol>
+<section id="order" class="booking-summary" hidden>
+<p id="order-chip" class="status-chip"></p><h2 id="order-title"></h2><p id="order-details"></p><p id="order-reference"></p>
+<div id="receipt-panel" hidden><h3>Recibo de reserva</h3><p id="receipt-status"></p><img id="receipt-image" class="receipt-image" alt="Plano de TRIP con tu mesa destacada">
+<div class="actions"><a id="download-image" class="button solid" download>Descargar plano</a><button type="button" class="button ghost" id="print-receipt">Imprimir o guardar recibo en PDF</button></div></div>
+</section>
+<form id="checkout" class="form-grid" hidden>
+<div id="legacy-checkout-fields">
+<label>Nombre completo<input name="name" autocomplete="name" minlength="2" maxlength="100"></label>
+<label>Correo electrónico<input name="email" type="email" autocomplete="email" maxlength="120"></label>
+</div>
+<p>Tu nombre y correo se envían a Libélula para procesar el pago.</p>
+<button class="button solid" type="submit">Continuar a Libélula →</button>
+</form>
+<button class="button solid" id="resume" type="button" hidden>Volver a Libélula →</button>
+<button class="button ghost" id="check" type="button" hidden>Comprobar pago</button><button class="button ghost" id="refresh-order" type="button" hidden>Actualizar estado</button>
+<p><a class="text-link" href="https://wa.me/59170785815?text=Necesito%20ayuda%20con%20una%20reserva%20de%20TRIP" target="_blank" rel="noopener noreferrer">Consultar a TRIP por WhatsApp →</a></p>
+</main></body></html>

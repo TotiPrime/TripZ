@@ -1,0 +1,22 @@
+.account-shell,.dashboard{padding-block:45px 75px}
+.account-shell{max-width:720px}
+.account-shell h1,.dashboard h1{font-size:clamp(48px,9vw,104px)}
+.account-shell h1 span,.dashboard h1 span{color:var(--accent)}
+.account-panel,.booking-summary{border:1px solid #594563;background:#1e1726;padding:20px}
+.account-panel h2,.admin-section h2{font-size:clamp(35px,5vw,62px)}
+.account-panel .actions{margin-top:16px}
+.account-panel #profile-id,.account-note{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.dashboard-links{margin:25px 0;display:flex;flex-wrap:wrap}
+.dashboard-links a{font-weight:800;border-bottom:1px solid var(--accent);padding:5px}
+.admin-section{margin-top:38px;scroll-margin-top:20px}
+.admin-section .actions,.admin-section form{margin:14px 0}
+.admin-section form{max-width:420px}
+.admin-section h3{font-size:37px}
+.admin-night{max-width:320px;margin-bottom:12px}
+.booking-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;list-style:none;padding:0;margin:18px 0}
+.booking-steps li{background:#221929;border:1px solid #5c4765;padding:8px;font-size:13px}
+.booking-steps [aria-current=step]{border-color:var(--accent);color:var(--accent)}
+.receipt-image{display:block;width:min(100%,460px);border:1px solid #5c4765;margin:15px 0}
+.booking-summary h2{margin-top:0}
+.payment-shell .status-chip{font-weight:800;color:var(--accent);margin:0 0 9px}
+@media print{.top,.payment-shell .actions,.payment-shell form,.payment-shell button,.payment-shell>p:last-child{display:none!important}body,.booking-summary{background:#fff;color:#000}.payment-status,.payment-shell .status-chip{color:#000}}

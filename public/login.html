@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es-BO"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Cuenta de reservas · TRIP</title><link rel="icon" href="/assets/trip-logo.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/cuenta.css"><script type="module" src="/login.js"></script></head>
+<body><header class="top"><div class="wrap nav"><a class="brand" href="/" aria-label="Inicio"><img src="/assets/trip-logo.png" width="68" alt="TRIP"></a><a href="/#mapa">Ver mapa de lounges →</a></div></header>
+<main class="wrap account-shell"><p class="eyebrow">TRIP / ACCESO DE CLIENTES</p><h1>MI CUENTA<span>.</span></h1>
+<p id="login-status" role="status">Comprobando tu sesión…</p>
+<section id="login-actions" class="account-panel" hidden>
+<div class="actions"><button class="button solid" id="show-signin" type="button">Iniciar sesión</button><button class="button ghost" id="show-register" type="button">Crear cuenta</button></div>
+<form id="customer-auth" class="form-grid">
+<label>Correo electrónico<input name="login" type="email" autocomplete="username" maxlength="254" required></label>
+<label>Contraseña<input name="password" type="password" autocomplete="current-password" maxlength="128" required></label>
+<label id="register-confirm" hidden>Confirmar contraseña<input name="confirmation" type="password" autocomplete="new-password" maxlength="128"></label>
+<button id="customer-submit" class="button solid" type="submit">Iniciar sesión</button>
+</form>
+<p><a href="/admin-login.html">Acceso de administración →</a></p>
+</section>
+<section id="profile-panel" class="account-panel" hidden>
+<h2>Datos del titular</h2><p id="profile-id"></p>
+<form id="profile-form" class="form-grid">
+<label>Nombre<input name="name" autocomplete="given-name" maxlength="70" required></label>
+<label>Apellido<input name="surname" autocomplete="family-name" maxlength="70" required></label>
+<label>Número de CI<input name="ci" autocomplete="off" maxlength="24" required></label>
+<label>Fecha de nacimiento<input name="birth" type="date" min="1900-01-01" autocomplete="bday" required></label>
+<label>Correo para recibos<input name="email" type="email" readonly></label>
+<p class="account-note">El recibo se prepara para el correo de tu cuenta al confirmar la mesa. Tu CI y fecha de nacimiento se guardan cifrados. Si eliges enviar la solicitud por WhatsApp, el mensaje incluye el CI.</p>
+<button class="button solid" type="submit">Guardar mi perfil</button>
+</form>
+<div class="actions"><a id="account-next" class="button ghost" href="/#mapa">Ir al mapa</a><a class="button ghost" href="/mis-reservas.html">Mis reservas</a><button type="button" class="button ghost" id="customer-logout">Cerrar sesión</button></div>
+</section></main></body></html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es-BO"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Administración · TRIP</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/mapa.css"><link rel="stylesheet" href="/cuenta.css"><script type="module" src="/admin.js"></script></head>
+<body data-admin><header class="top"><div class="wrap nav"><a class="brand" href="/admin"><img src="/assets/trip-logo.png" alt="TRIP" width="68"></a><button type="button" class="button ghost" id="admin-logout">Cerrar sesión</button></div></header>
+<main class="wrap dashboard"><p class="eyebrow">TRIP / EQUIPO AUTORIZADO</p><h1>PANEL ADMINISTRATIVO<span>.</span></h1>
+<nav class="dashboard-links" aria-label="Panel administrativo"><a href="#mapa">Mapa</a><a href="#reservas">Reservas</a><a href="#usuarios">Usuarios</a></nav>
+<label class="table-picker admin-night">Evento del mapa<select id="admin-night"><option value="viernes">Viernes · Festi Cumbia</option><option value="sabado">Sábado · Rodeó Fest</option></select></label>
+<section id="mapa" class="venue-map" aria-labelledby="map-title">
+        <div class="map-header"><div><p class="eyebrow" id="map-kicker">PLANO DE MESAS</p><h3 id="map-title">CONTROL DE MESAS</h3></div></div>
+        <p id="map-notice" role="status" hidden></p>
+        <div class="map-legend" id="map-zones" aria-label="Zonas"></div>
+        <div class="map-state-legend"><span><i class="state-free"></i> Disponible</span><span><img src="/assets/trip-logo.png" alt=""> Reservada</span><span><i class="state-blocked"></i> Bloqueada</span></div>
+        <div class="map-layout">
+          <div class="map-scroll" tabindex="0" aria-label="Plano del local, desplázate lateralmente si es necesario">
+            <div class="seat-plan" id="seat-plan">
+              <div class="stage-block" aria-hidden="true">ESCENARIO</div><div class="bar-block" aria-hidden="true">BARRA</div><div class="door-block" aria-hidden="true">↑ INGRESO</div>
+            </div>
+          </div>
+          <aside class="map-sidebar" aria-label="Selección de mesa">
+            <label class="table-picker">Ir a la mesa <select id="table-picker"><option value="">Seleccionar número</option></select></label>
+            <div id="map-selection"></div>
+            <button type="button" class="button ghost map-reload" id="map-reload">Actualizar disponibilidad</button>
+            <button type="button" id="map-button" class="map-reference">Ver el flyer del plano</button>
+          </aside>
+        </div>
+      </section>
+<section class="admin-section" id="reservas"><h2>Reservas</h2><p id="admin-bookings-status" role="status"></p><div class="actions"><label class="table-picker">Filtrar por evento<select id="admin-booking-night"><option value="">Todos los eventos</option><option value="viernes">Festi Cumbia</option><option value="sabado">Rodeó Fest</option></select></label><button type="button" id="admin-clear-customer" class="button ghost" hidden>Quitar filtro de usuario o mesa</button><button type="button" id="admin-refresh" class="button ghost">Actualizar lista</button></div><div id="admin-bookings"></div></section>
+<section class="admin-section" id="usuarios"><h2>Usuarios</h2><form id="admin-user-search" class="form-grid"><label>Buscar por nombre, correo o ID<input name="q" type="search" maxlength="100"></label><button class="button ghost">Buscar</button></form><p id="admin-users-status" role="status"></p><div id="admin-users"></div></section>
+</main><dialog id="admin-flyer" aria-label="Plano del evento"><div class="modal-inner"><button class="close" aria-label="Cerrar">×</button><img class="large-flyer" alt="Plano original del evento"></div></dialog></body></html>
