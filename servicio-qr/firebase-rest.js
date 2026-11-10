@@ -22,7 +22,7 @@ async function googleToken(env) {
     .setIssuedAt()
     .setExpirationTime('1h')
     .sign(key);
-  const result=await fetch(tokenURL,{method:'POST',redirect:'error',
+  const result=await fetch(tokenURL,{method:'POST',redirect:'manual',
     body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion:jwt})});
   if(!result.ok) throw new Error('Google rechazó la credencial de servicio (OAuth '+result.status+')');
   const {access_token,expires_in}=await result.json();
@@ -55,7 +55,7 @@ export async function authenticate(request,env) {
   if(claims.email_verified!==true) throw new TripError(403,'correo_sin_verificar','Verifica tu correo.');
   const token=await googleToken(env);
   const response=await fetch('https://identitytoolkit.googleapis.com/v1/projects/'+encodeURIComponent(env.FIREBASE_PROJECT_ID)+'/accounts:lookup',{
-    method:'POST',redirect:'error',
+    method:'POST',redirect:'manual',
     headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
     body:JSON.stringify({localId:[claims.sub]})
   });
@@ -72,7 +72,7 @@ export function connectFirebase(env,token) {
   const endpoint=new URL('/trip.json',env.FIREBASE_DATABASE_URL);
   const headers={Authorization:'Bearer '+token};
   async function read(withETag) {
-    const response=await fetch(endpoint,{redirect:'error',cache:'no-store',
+    const response=await fetch(endpoint,{redirect:'manual',cache:'no-store',
       headers:withETag?{...headers,'X-Firebase-ETag':'true'}:headers});
     if(!response.ok) throw new Error('Firebase rechazó la lectura ('+response.status+')');
     return {state:await response.json(),etag:response.headers.get('etag')};
@@ -85,7 +85,7 @@ export function connectFirebase(env,token) {
         if(!etag) throw new Error('Firebase omitió la etiqueta de transacción');
         const result=update(state);
         const response=await fetch(endpoint,{
-          method:'PUT',redirect:'error',
+          method:'PUT',redirect:'manual',
           headers:{...headers,'Content-Type':'application/json','If-Match':etag},
           body:JSON.stringify(state)
         });
