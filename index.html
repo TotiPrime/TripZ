@@ -192,7 +192,23 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 .my-order{border:1px solid #5c4765;background:var(--panel);padding:16px;margin-bottom:10px}
 .my-order p{margin:5px 0}
 .my-order h2{margin:0}
-.my-order .actions{margin-top:10px}
+.my-order .actions{margin-top:12px}
+#trip-access,#trip-admin,#trip-editor{width:min(760px,calc(100% - 20px));max-height:calc(100dvh - 24px);overflow:auto}
+#trip-admin{width:min(920px,calc(100% - 20px))}
+.trip-tools{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.trip-tools input,.trip-tools select,.trip-edit input,.trip-edit select{min-width:0;max-width:100%;padding:10px;background:#15101a;color:var(--ink);border:1px solid #6a536e;font:inherit}
+.trip-tools label,.trip-edit label{display:grid;gap:4px}
+.trip-list h3{margin:20px 0 10px}
+.my-order h4{font-size:22px;margin:3px 0}
+.order-top{display:flex;align-items:start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.order-state{border:1px solid #897792;padding:4px 9px;font-weight:700;color:#eed2fb}
+.order-state[data-state=confirmed]{border-color:#5aa684;color:#a6f6d1}
+.order-state[data-state=unavailable]{border-color:#c47b6a;color:#ffc5b6}
+.order-meta{color:var(--muted);overflow-wrap:anywhere}
+.trip-edit{display:grid;gap:10px;margin:14px 0 0;padding:14px;border:1px solid #6a536e}
+.trip-edit .actions,.trip-list .actions{flex-wrap:wrap}
+.trip-feedback{min-height:1.5em;color:#f4dca2;margin:10px 0}
+@media(max-width:540px){.trip-tools label{width:100%}.trip-list .button{white-space:normal}}
 @media(max-width:850px){.map-layout{grid-template-columns:minmax(0,1fr)}.map-sidebar{position:static}.seat-plan{min-width:510px}.table-picker{max-width:250px}.map-sidebar .map-reload{width:max-content}}
 @media(max-width:540px){.map-header{align-items:start;flex-direction:column}.map-legend{gap:5px}.zone-filter{font-size:11px}.map-state-legend{gap:4px 9px}.seat-plan{min-width:480px}}
 
@@ -243,7 +259,7 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 <section class="section lounge-section" id="lounges">
   <div class="wrap">
     <div class="heading"><div><p class="eyebrow">02 / RESERVAS</p><h2>ELIGE TU LOUNGE<span>.</span></h2></div><p>Elige tu mesa en el plano y revisa el precio de su zona.</p></div>
-    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="#mapa">Ver plano de mesas</a><button id="trip-account" class="button ghost" type="button">Mi cuenta</button></div></div>
+    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="#mapa">Ver plano de mesas</a><button id="trip-account" class="button ghost" type="button">Mi cuenta</button><button id="trip-admin-open" class="button solid" type="button" hidden>Panel de administración</button></div></div>
     <div id="lounge-panel" role="tabpanel" aria-labelledby="tab-viernes" tabindex="0">
       <p id="lounge-note"></p>
       <section id="mapa" class="venue-map" aria-labelledby="map-title">
@@ -308,8 +324,31 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 <button id="trip-reload-user" type="button" class="button ghost" hidden>Ya verifiqué mi correo</button>
 <button id="trip-signout" type="button" class="button ghost">Cerrar sesión</button>
 </div>
-<div id="trip-requests"></div>
+<p id="trip-account-feedback" class="trip-feedback" role="status"></p>
+<div id="trip-requests" class="trip-list"></div>
 </div>
+</div>
+</dialog>
+<dialog id="trip-admin" aria-labelledby="trip-admin-title">
+<div class="modal-inner">
+<div class="modal-head"><h2 id="trip-admin-title">PANEL DE TRIP</h2><button type="button" class="close" aria-label="Cerrar administración">×</button></div>
+<div class="actions"><button type="button" class="button solid" data-admin-view="requests" aria-pressed="true">Solicitudes</button><button type="button" class="button ghost" data-admin-view="users" aria-pressed="false">Usuarios</button></div>
+<p id="trip-admin-feedback" class="trip-feedback" role="status"></p>
+<section id="trip-admin-requests">
+<div class="trip-tools"><label>Buscar solicitud <input id="trip-search-request" type="search" placeholder="Correo, mesa o referencia"></label><label>Estado <select id="trip-request-state"><option value="">Todos</option><option value="sent">Solicitud enviada</option><option value="confirmed">Reserva confirmada</option><option value="unavailable">Mesa ocupada</option></select></label></div>
+<div id="trip-admin-orders" class="trip-list"></div>
+</section>
+<section id="trip-admin-users" hidden>
+<div class="trip-tools"><label>Buscar usuario <input id="trip-search-user" type="search" placeholder="Nombre, correo o UID"></label></div>
+<p class="order-meta">El directorio muestra clientes que verificaron su correo y entraron en TripZ, además de quienes ya tienen solicitudes. Para eliminar una cuenta de acceso, usa <a href="https://console.firebase.google.com/project/trip-76b7e/authentication/users" target="_blank" rel="noopener noreferrer">Firebase Authentication</a>.</p>
+<div id="trip-admin-directory" class="trip-list"></div>
+</section>
+</div>
+</dialog>
+<dialog id="trip-editor" aria-labelledby="trip-editor-title">
+<div class="modal-inner">
+<div class="modal-head"><h2 id="trip-editor-title">EDITAR</h2><button type="button" class="close" aria-label="Cerrar edición">×</button></div>
+<form class="trip-edit"></form>
 </div>
 </dialog>
 <script type="module">
@@ -392,6 +431,8 @@ const {setMapNight, focusZone, refreshBookingView} = (() => {
       } else {
         if (booking?.requested(night,table.number)) {
           card.append(element('p','Solicitud registrada. Puedes consultarla en Mi cuenta.'));
+        } else if (booking?.blocked()) {
+          card.append(element('p','TRIP desactivó las nuevas solicitudes para esta cuenta.'));
         } else if (booking?.ready()) {
           const reserve = element('button','Solicitar esta mesa','button solid');
           reserve.type = 'button';

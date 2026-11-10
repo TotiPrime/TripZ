@@ -9,18 +9,35 @@
         }
       },
       "solicitudes": {
-        ".indexOn": ["uid"],
+        ".indexOn": [
+          "uid"
+        ],
         ".read": "auth != null && auth.token.email_verified === true && (root.child('trip/admins').child(auth.uid).val() === true || (query.orderByChild === 'uid' && query.equalTo === auth.uid))",
         "$id": {
-          ".read": "auth != null && auth.token.email_verified === true && data.child('uid').val() === auth.uid",
-          ".write": "auth != null && auth.token.email_verified === true && ((!data.exists() && newData.child('uid').val() === auth.uid && root.child('trip/admins').child(auth.uid).val() !== true && !root.child('trip/mesas').child(newData.child('evento').val()).child(newData.child('mesa').val()).exists()) || (data.child('uid').val() === auth.uid && !newData.exists() && root.child('trip/mesas').child(data.child('evento').val()).child(data.child('mesa').val()).val() !== $id))",
-          ".validate": "$id.matches(/^[A-Za-z0-9_-]{20}$/) && newData.hasChildren(['uid','correo','evento','mesa','creada'])",
-          "uid": { ".validate": "newData.val() === auth.uid" },
-          "correo": { ".validate": "newData.isString() && newData.val() === auth.token.email && newData.val().length <= 254" },
-          "evento": { ".validate": "newData.val() === 'viernes' || newData.val() === 'sabado'" },
-          "mesa": { ".validate": "newData.isString() && newData.val().matches(/^([1-9]|[1-7][0-9]|8[0-4])$/)" },
-          "creada": { ".validate": "newData.isNumber() && newData.val() <= now && newData.val() >= now - 60000" },
-          "$otro": { ".validate": false }
+          ".read": "auth != null && auth.token.email_verified === true && (root.child('trip/admins').child(auth.uid).val() === true || data.child('uid').val() === auth.uid)",
+          ".write": "auth != null && auth.token.email_verified === true && ((!data.exists() && newData.exists() && !(root.child('trip/admins').child(auth.uid).val() === true) && !(root.child('trip/bloqueados').child(auth.uid).val() === true) && newData.child('uid').val() === auth.uid && !root.child('trip/mesas').child(newData.child('evento').val()).child(newData.child('mesa').val()).exists()) || (data.exists() && (root.child('trip/admins').child(auth.uid).val() === true || data.child('uid').val() === auth.uid) && root.child('trip/mesas').child(data.child('evento').val()).child(data.child('mesa').val()).val() !== $id && (!newData.exists() || ((root.child('trip/admins').child(auth.uid).val() === true || !(root.child('trip/bloqueados').child(auth.uid).val() === true)) && !root.child('trip/mesas').child(newData.child('evento').val()).child(newData.child('mesa').val()).exists()))))",
+          ".validate": "$id.matches(/^[A-Za-z0-9_-]{20}$/) && newData.hasChildren(['uid','correo','evento','mesa','creada']) && (!data.child('revision').exists() || newData.child('revision').exists()) && (!data.exists() || newData.child('revision').val() === (data.child('revision').exists() ? data.child('revision').val() + 1 : 1))",
+          "uid": {
+            ".validate": "newData.isString() && (data.exists() ? newData.val() === data.val() : newData.val() === auth.uid)"
+          },
+          "correo": {
+            ".validate": "newData.isString() && newData.val().length <= 254 && (data.exists() ? newData.val() === data.val() : newData.val() === auth.token.email)"
+          },
+          "evento": {
+            ".validate": "newData.val() === 'viernes' || newData.val() === 'sabado'"
+          },
+          "mesa": {
+            ".validate": "newData.isString() && newData.val().matches(/^([1-9]|[1-7][0-9]|8[0-4])$/)"
+          },
+          "creada": {
+            ".validate": "newData.isNumber() && (data.exists() ? newData.val() === data.val() : (newData.val() <= now && newData.val() >= now - 60000))"
+          },
+          "$otro": {
+            ".validate": false
+          },
+          "revision": {
+            ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() + 1 : 1)"
+          }
         }
       },
       "mesas": {
@@ -28,8 +45,36 @@
         "$evento": {
           "$mesa": {
             ".write": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true && (!data.exists() || !newData.exists() || data.val() === newData.val())",
-            ".validate": "($evento === 'viernes' || $evento === 'sabado') && $mesa.matches(/^([1-9]|[1-7][0-9]|8[0-4])$/) && newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{20}$/) && root.child('trip/solicitudes').child(newData.val()).child('evento').val() === $evento && root.child('trip/solicitudes').child(newData.val()).child('mesa').val() === $mesa"
+            ".validate": "($evento === 'viernes' || $evento === 'sabado') && $mesa.matches(/^([1-9]|[1-7][0-9]|8[0-4])$/) && newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{20}$/) && newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('evento').val() === $evento && newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('mesa').val() === $mesa && newData.parent().parent().parent().child('bloqueados').child(newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('uid').val()).val() !== true"
           }
+        }
+      },
+      "usuarios": {
+        ".read": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+          ".write": "auth != null && auth.token.email_verified === true && newData.exists() && ((auth.uid === $uid && !data.exists() && !(root.child('trip/admins').child(auth.uid).val() === true)) || (root.child('trip/admins').child(auth.uid).val() === true && (data.exists() || root.child('trip/solicitudes').child(newData.child('solicitud').val()).child('uid').val() === $uid)))",
+          ".validate": "newData.hasChildren(['correo'])",
+          "correo": {
+            ".validate": "newData.isString() && newData.val().length <= 254 && (data.exists() ? newData.val() === data.val() : (auth.uid === $uid ? newData.val() === auth.token.email : newData.val() === root.child('trip/solicitudes').child(newData.parent().child('solicitud').val()).child('correo').val()))"
+          },
+          "nombre": {
+            ".validate": "newData.isString() && newData.val().length <= 80 && root.child('trip/admins').child(auth.uid).val() === true"
+          },
+          "solicitud": {
+            ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{20}$/) && (data.exists() ? newData.val() === data.val() : (root.child('trip/admins').child(auth.uid).val() === true && root.child('trip/solicitudes').child(newData.val()).child('uid').val() === $uid))"
+          },
+          "$otro": {
+            ".validate": false
+          }
+        }
+      },
+      "bloqueados": {
+        ".read": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".read": "auth != null && auth.token.email_verified === true && auth.uid === $uid",
+          ".write": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true && root.child('trip/admins').child($uid).val() !== true",
+          ".validate": "newData.val() === true"
         }
       }
     }
