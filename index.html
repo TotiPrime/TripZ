@@ -175,7 +175,7 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 .seat[data-status=reserved] img{width:17px;height:15px;object-fit:contain}
 .seat[data-status=reserved] span{font-size:10px}
 .seat[data-status=blocked]{background:#27232b;border-color:#726a74;color:#b7aebc}
-.seat.filtered{opacity:.3}
+.seat.firebase-reserved{background:#652856;border-color:#db83b5}.seat.firebase-reserved img{width:16px;height:13px;object-fit:contain}.seat.filtered{opacity:.3}
 .map-sidebar{position:sticky;top:12px;display:grid;gap:11px}
 .map-sidebar select{width:100%;background:#1c1523;color:var(--ink);padding:8px;border:1px solid #63536e;border-radius:0;font:inherit}
 .table-picker{display:grid;gap:4px;color:var(--muted);font-size:13px}
@@ -184,6 +184,7 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 .map-selection p{margin:8px 0;font-size:14px}
 .map-selection .eyebrow{margin-bottom:6px}
 .map-selection .button{white-space:normal;text-align:center;width:100%;margin-top:6px}
+.map-selection textarea{width:100%;min-height:7em;background:var(--panel);color:var(--ink);padding:8px}
 .map-reference{background:none;border:0;color:var(--muted);text-align:left;padding:0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .map-reload{font-size:12px}
 #map-notice{font-size:14px;color:var(--pink)}
@@ -198,7 +199,7 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 </style>
 <title>TRIP Cochabamba · La noche es TRIP</title>
 </head>
-<body data-reservations-url="https://trip-cochabamba.tenderfig16.chatgpt.site">
+<body>
 <a class="skip" href="#cartelera">Saltar a la cartelera</a>
 <header class="top" id="inicio">
   <div class="wrap nav">
@@ -242,12 +243,12 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 <section class="section lounge-section" id="lounges">
   <div class="wrap">
     <div class="heading"><div><p class="eyebrow">02 / RESERVAS</p><h2>ELIGE TU LOUNGE<span>.</span></h2></div><p>Elige tu mesa en el plano y revisa el precio de su zona.</p></div>
-    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="https://trip-cochabamba.tenderfig16.chatgpt.site/login.html">Ingresar o crear cuenta</a><a class="button ghost" href="https://trip-cochabamba.tenderfig16.chatgpt.site/mis-reservas.html">Mis reservas <span aria-hidden="true">→</span></a></div></div>
+    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="#mapa">Ver plano de mesas</a><button id="trip-account" class="button ghost" type="button">Mi cuenta</button></div></div>
     <div id="lounge-panel" role="tabpanel" aria-labelledby="tab-viernes" tabindex="0">
       <p id="lounge-note"></p>
       <section id="mapa" class="venue-map" aria-labelledby="map-title">
         <div class="map-header"><div><p class="eyebrow" id="map-kicker">PLANO DE MESAS</p><h3 id="map-title">TU LUGAR EN TRIP</h3></div></div>
-        <p id="map-notice">Plano de referencia. Consulta la disponibilidad actual en el sistema de reservas.</p>
+        <p id="map-notice" role="status">Plano de referencia. TRIP confirma la disponibilidad.</p>
         <div class="map-legend" id="map-zones" aria-label="Zonas"></div>
         <p class="map-state-legend">Los colores identifican las zonas del local.</p>
         <div class="map-layout">
@@ -259,7 +260,6 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
           <aside class="map-sidebar" aria-label="Selección de mesa">
             <label class="table-picker">Ir a la mesa <select id="table-picker"><option value="">Seleccionar número</option></select></label>
             <div id="map-selection"></div>
-            <a class="button ghost map-reload" id="map-reload" href="https://trip-cochabamba.tenderfig16.chatgpt.site/#mapa">Consultar disponibilidad</a>
             <button type="button" id="map-button" class="map-reference">Ver el flyer del plano</button>
           </aside>
         </div>
@@ -289,19 +289,40 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
   <div class="wrap visit-inner"><div><p class="eyebrow">04 / CÓMO LLEGAR</p><h2>NOS VEMOS<br>EN TRIP<span>.</span></h2></div><div class="address"><p><strong>Avenida Portales</strong><br>Entre av. Pando y av. Melchor Urquidi,<br>frente al parqueo del Hupermall.<br>Cochabamba, Bolivia.</p><div class="actions"><a class="button solid" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query=Trip+Bar+Avenida+Portales+Hupermall+Cochabamba">Abrir mapa →</a><a class="button ghost" target="_blank" rel="noopener noreferrer" href="https://wa.me/59170785815?text=Quiero%20reservar%20para%20TRIP">WhatsApp →</a></div></div></div>
 </section>
 </main>
-<footer class="wrap footer"><a class="brand" href="#inicio"><img src="./public/assets/trip-logo.png" alt="TRIP" width="58" height="40"></a><span>TRIP · COCHABAMBA, BOLIVIA</span><a href="tel:+59170785815">+591 70785815</a><a href="https://trip-cochabamba.tenderfig16.chatgpt.site/admin-login.html">Administración</a></footer>
+<footer class="wrap footer"><a class="brand" href="#inicio"><img src="./public/assets/trip-logo.png" alt="TRIP" width="58" height="40"></a><span>TRIP · COCHABAMBA, BOLIVIA</span><a href="tel:+59170785815">+591 70785815</a></footer>
 <dialog id="modal" aria-labelledby="modal-title"><div class="modal-inner"><div class="modal-head"><h2 id="modal-title"></h2><button type="button" class="close" aria-label="Cerrar">×</button></div><div id="modal-content"></div></div></dialog>
+<dialog id="trip-access" aria-labelledby="trip-access-title">
+<div class="modal-inner">
+<div class="modal-head"><h2 id="trip-access-title">CUENTA TRIP</h2><button type="button" class="close" aria-label="Cerrar">×</button></div>
+<p id="trip-access-status" role="status"></p>
+<form id="trip-auth" class="form-grid" hidden>
+<label>Correo electrónico<input type="email" name="email" autocomplete="username" maxlength="254" required></label>
+<label>Contraseña<input type="password" name="password" autocomplete="current-password" maxlength="128" required></label>
+<button class="button solid" name="action" value="login">Iniciar sesión</button>
+<button class="button ghost" name="action" value="register">Crear cuenta</button>
+<button class="button ghost" name="action" value="reset" formnovalidate>Recuperar contraseña</button>
+</form>
+<div id="trip-session" hidden>
+<div class="actions">
+<button id="trip-verify" type="button" class="button ghost" hidden>Reenviar verificación</button>
+<button id="trip-reload-user" type="button" class="button ghost" hidden>Ya verifiqué mi correo</button>
+<button id="trip-signout" type="button" class="button ghost">Cerrar sesión</button>
+</div>
+<div id="trip-requests"></div>
+</div>
+</div>
+</dialog>
 <script type="module">
 import {events} from './public/catalog.js';
 import {floorPlan} from './public/plan.js';
-const {setMapNight, focusZone} = (() => {
-  const service = new URL(document.body.dataset.reservationsUrl);
+import {mountTripFirebase} from './firebase-trip.js';
+let booking;
+const {setMapNight, focusZone, refreshBookingView} = (() => {
   const venue = document.querySelector('#mapa');
   const plan = document.querySelector('#seat-plan');
   const picker = document.querySelector('#table-picker');
   const panel = document.querySelector('#map-selection');
   const legend = document.querySelector('#map-zones');
-  const live = document.querySelector('#map-reload');
   const initial = new URLSearchParams(location.search);
   let night;
   let seats = new Map();
@@ -332,20 +353,67 @@ const {setMapNight, focusZone} = (() => {
     picker.value = table?.number || '';
     for (const [number,node] of seats) node.setAttribute('aria-pressed',String(number === selected?.number));
     const card = element('div','','map-selection');
-    const url = new URL('/',service);
-    url.searchParams.set('evento',night);
-    url.hash = 'mapa';
     if (table) {
-      const [,name,price,description] = events[night].zones.find(zone=>zone[0] === table.zone);
-      url.searchParams.set('mesa',table.number);
+      const event = events[night];
+      const [,name,price,description] = event.zones.find(zone=>zone[0] === table.zone);
+      const message = [
+        'Hola, TRIP. Quisiera consultar si está disponible esta mesa.',
+        event.title+' · '+event.date+' de '+event.dateISO.slice(0,4),
+        'Mesa '+table.number+' · '+name+' · '+price+' Bs',
+        description
+      ].join('\n');
       card.append(element('p','TU SELECCIÓN','eyebrow'),element('h4','Mesa '+table.number),element('p',name+' · '+price+' Bs'),element('p',description));
+      const copy = element('button','Copiar consulta','button ghost');
+      copy.type = 'button';
+      const status = element('p');
+      status.setAttribute('role','status');
+      const manual = element('textarea');
+      manual.hidden = true;
+      manual.readOnly = true;
+      manual.value = message;
+      manual.setAttribute('aria-label','Texto de la consulta');
+      copy.addEventListener('click',async()=>{
+        try {
+          await navigator.clipboard.writeText(message);
+          status.textContent = 'Consulta copiada.';
+        } catch {
+          manual.hidden = false;
+          manual.focus();
+          manual.select();
+          status.textContent = 'Copia el texto seleccionado.';
+        }
+      });
+      const contact = element('a','Consultar por WhatsApp','button solid');
+      contact.href = 'https://wa.me/59170785815?text='+encodeURIComponent(message);
+      contact.target = '_blank';
+      contact.rel = 'noopener noreferrer';
+      if (booking?.confirmed(night,table.number)) {
+        card.append(element('p','Mesa reservada. Elige otra mesa del plano.'));
+      } else {
+        if (booking?.requested(night,table.number)) {
+          card.append(element('p','Solicitud registrada. Puedes consultarla en Mi cuenta.'));
+        } else if (booking?.ready()) {
+          const reserve = element('button','Solicitar esta mesa','button solid');
+          reserve.type = 'button';
+          reserve.addEventListener('click',async()=>{
+            reserve.disabled = true;
+            try {
+              await booking.request(night,table.number);
+            } catch(error) { status.textContent = error.message; }
+            finally {reserve.disabled = false;}
+          });
+          card.append(reserve);
+        } else {
+          const access = element('button','Abrir mi cuenta','button ghost');
+          access.type = 'button';
+          access.addEventListener('click',()=>document.querySelector('#trip-account').click());
+          card.append(access);
+        }
+        card.append(element('p','La mesa se confirma cuando el equipo de TRIP revisa la solicitud y verifica el pago.'),contact,copy,status,manual);
+      }
     } else {
-      card.append(element('p','PLANO DE REFERENCIA','eyebrow'),element('h4','Elige una mesa'),element('p','Selecciona un número para ver su zona y precio.'));
+      card.append(element('p','PLANO DE REFERENCIA','eyebrow'),element('h4','Elige una mesa'),element('p','Selecciona una mesa para ver su zona, precio y datos de contacto.'));
     }
-    const go = element('a',table?'Ver disponibilidad y reservar':'Abrir sistema de reservas','button solid');
-    go.href = url.href;
-    live.href = url.href;
-    card.append(element('p','La disponibilidad actual y la confirmación se consultan en el sistema de reservas de TRIP.'),go);
     panel.replaceChildren(card);
     if (scroll && matchMedia('(max-width:850px)').matches) panel.scrollIntoView({block:'nearest'});
   }
@@ -390,9 +458,29 @@ const {setMapNight, focusZone} = (() => {
     const start = !restored && initial.get('evento')===night && tables.find(table=>table.number===Number(initial.get('mesa')));
     restored = true;
     select(start || undefined);
+    refreshBookingView();
   }
 
-  return {setMapNight,focusZone};
+  function refreshBookingView() {
+    if (!night) return;
+    for (const [number,node] of seats) {
+      const taken = booking?.confirmed(night,number);
+      node.classList.toggle('firebase-reserved',Boolean(taken));
+      const label = node.getAttribute('aria-label').replace(/, Reservada$/,'');
+      node.setAttribute('aria-label',label+(taken?', Reservada':''));
+      if (taken && !node.querySelector('img')) {
+        const logo = element('img');
+        logo.src = './public/assets/trip-logo.png';
+        logo.alt = '';
+        node.replaceChildren(logo,element('span',String(number)));
+      } else if (!taken && node.querySelector('img')) {
+        node.textContent = String(number);
+      }
+    }
+    if (selected) select(selected);
+  }
+
+  return {setMapNight,focusZone,refreshBookingView};
 })();
 
 
@@ -524,6 +612,8 @@ for (const button of document.querySelectorAll('[data-video]')) {
 }
 const returnEvent = new URLSearchParams(location.search).get('evento');
 render(returnEvent === 'sabado' ? 'sabado' : active);
+booking=mountTripFirebase(refreshBookingView);
+refreshBookingView();
 </script>
 </body>
 </html>
