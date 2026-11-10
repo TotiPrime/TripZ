@@ -1,2 +1,1 @@
-// Copia la URL HTTPS que muestra Wrangler al desplegar el Worker gratuito.
-export const qrApiBase = '';
+export const qrApiBase = 'https://tripz-qr.totiprime.workers.dev';
