@@ -1,5 +1,6 @@
 import { firebaseConfig } from './firebase-config.js';
 import { qrApiBase } from './qr-config.js';
+import { mountClaims } from './public/reclamos.js';
 import { events } from './public/catalog.js';
 import { floorPlan } from './public/plan.js';
 
@@ -44,6 +45,11 @@ export function mountTripFirebase(changed=()=>{}) {
   let roleResolved=false,blocksReady=false,profilesReady=false,blocks={},profiles={};
   let generation=0;
   let stopRole,stopRequests,stopBlocks,stopProfiles;
+  const claimsSection=adminPage && document.querySelector('#trip-admin-claims');
+  const scanner=claimsSection?mountClaims(claimsSection,(accion,tipo,codigo)=>{
+    if(!role || !user?.emailVerified) throw new Error('El canje requiere una cuenta administradora verificada.');
+    return qrRequest('tripCanjes',{accion,tipo,codigo});
+  }):null;
 
   function node(tag,text,css) {
     const element=document.createElement(tag);
@@ -176,26 +182,34 @@ export function mountTripFirebase(changed=()=>{}) {
     });
   }
 
-  async function reservationAPI(accion,solicitud,row) {
+  async function qrRequest(endpoint,payload) {
     const account=user;
     const token=await account.getIdToken();
     if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
     if(!qrApiBase.startsWith('https://')) throw new Error('Falta configurar el servicio QR gratuito de TRIP.');
     let response;
     try {
-      response=await fetch(qrApiBase.replace(/\/+$/,'')+'/tripReservas',{
+      response=await fetch(qrApiBase.replace(/\/+$/,'')+'/'+endpoint,{
         method:'POST',
         headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
-        body:JSON.stringify({accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0}),
+        body:JSON.stringify(payload),
         signal:AbortSignal.timeout(35000)
       });
     } catch {
       throw new Error('No se pudo conectar al servicio de QR de TRIP.');
     }
     const result=await response.json().catch(()=>null);
-    if(!response.ok || !result?.ok) throw new Error(result?.message || 'El servicio de QR de TRIP no está disponible.');
+    if(!response.ok || !result?.ok) {
+      const error=new Error(result?.message || 'El servicio de QR de TRIP no está disponible.');
+      error.qrCode=result?.code;
+      throw error;
+    }
     if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
     return result;
+  }
+
+  function reservationAPI(accion,solicitud,row) {
+    return qrRequest('tripReservas',{accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0});
   }
 
   async function showTicket(ticket) {
@@ -447,6 +461,7 @@ export function mountTripFirebase(changed=()=>{}) {
   }
 
   function setAdminView(view) {
+    if(view!=='claims') scanner?.reset();
     for(const button of adminSection.querySelectorAll('[data-admin-view]')) {
       const selected=button.dataset.adminView===view;
       button.setAttribute('aria-pressed',String(selected));
@@ -459,6 +474,7 @@ export function mountTripFirebase(changed=()=>{}) {
   }
 
   function showSession(account,forceToken=false) {
+    scanner?.reset();
     user=account;
     const version=++generation;
     stopRole?.();
@@ -503,7 +519,10 @@ export function mountTripFirebase(changed=()=>{}) {
       adminOpen.hidden=!role || adminPage;
       if(panel) {
         adminSection.hidden=!adminPage || !role;
-        if(!role && adminPage) editor.hidden=true;
+        if(!role && adminPage) {
+          editor.hidden=true;
+          scanner?.reset();
+        }
       }
       status.textContent=role?'Sesión de administración · '+user.email:
         adminPage?'Esta cuenta no tiene permisos de administración.':'Cuenta de '+user.email;

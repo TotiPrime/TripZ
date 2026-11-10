@@ -210,3 +210,6 @@ video{display:block;width:100%;max-height:69dvh;background:#08060a}
 @media(max-width:540px){.trip-tools label{width:100%}.trip-list .button{white-space:normal}}
 @media(max-width:850px){.map-layout{grid-template-columns:minmax(0,1fr)}.map-sidebar{position:static}.seat-plan{min-width:510px}.table-picker{max-width:250px}.map-sidebar .map-reload{width:max-content}}
 @media(max-width:540px){.map-header{align-items:start;flex-direction:column}.map-legend{gap:5px}.zone-filter{font-size:11px}.map-state-legend{gap:4px 9px}.seat-plan{min-width:480px}}
+
+.claim-camera{display:block;width:min(100%,440px);max-height:300px;object-fit:contain;background:#0c0a11;border:1px solid #5c4765;border-radius:10px;margin-top:16px}
+.claim-result{max-width:540px}.claim-result h3{margin:0}.claim-result .button:disabled{opacity:.65;cursor:default}

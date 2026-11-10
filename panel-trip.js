@@ -21,7 +21,7 @@ document.querySelector('#trip-panel-content').innerHTML = `<section id="trip-acc
 </div>
 </section>
 <section id="trip-admin" class="panel-section" aria-label="Gestión de TRIP" hidden>
-<div class="actions"><button type="button" class="button solid" data-admin-view="requests" aria-pressed="true">Solicitudes</button><button type="button" class="button ghost" data-admin-view="users" aria-pressed="false">Usuarios</button></div>
+<div class="actions"><button type="button" class="button solid" data-admin-view="requests" aria-pressed="true">Solicitudes</button><button type="button" class="button ghost" data-admin-view="users" aria-pressed="false">Usuarios</button><button type="button" class="button ghost" data-admin-view="claims" aria-pressed="false">Reclamos</button></div>
 <p id="trip-admin-feedback" class="trip-feedback" role="status"></p>
 <section id="trip-admin-requests">
 <div class="trip-tools"><label>Buscar solicitud <input id="trip-search-request" type="search" placeholder="Correo, mesa o referencia"></label><label>Estado <select id="trip-request-state"><option value="">Todos</option><option value="sent">Solicitud enviada</option><option value="confirmed">Reserva confirmada</option><option value="unavailable">Mesa ocupada</option></select></label></div>
@@ -31,6 +31,31 @@ document.querySelector('#trip-panel-content').innerHTML = `<section id="trip-acc
 <div class="trip-tools"><label>Buscar usuario <input id="trip-search-user" type="search" placeholder="Nombre, correo o UID"></label></div>
 <p class="order-meta">El directorio muestra clientes que verificaron su correo y entraron en TripZ, además de quienes ya tienen solicitudes. Para eliminar una cuenta de acceso, usa <a href="https://console.firebase.google.com/project/trip-76b7e/authentication/users" target="_blank" rel="noopener noreferrer">Firebase Authentication</a>.</p>
 <div id="trip-admin-directory" class="trip-list"></div>
+</section>
+<section id="trip-admin-claims" hidden aria-labelledby="trip-claims-title">
+<h2 id="trip-claims-title">Reclamos por QR</h2>
+<p>Escanea el comprobante. Revisa el beneficio y pulsa <strong>RECLAMADO</strong> al registrarlo.</p>
+<div class="trip-tools">
+<label>Tipo de reclamo
+<select id="trip-claim-kind">
+<option value="saldo">Consumo</option>
+<option value="combo">Combos</option>
+<option value="manillas">Manillas</option>
+</select>
+</label>
+</div>
+<div class="actions">
+<button type="button" class="button solid" id="trip-claim-start">Activar cámara</button>
+<button type="button" class="button ghost" id="trip-claim-stop" hidden>Detener cámara</button>
+</div>
+<video id="trip-claim-camera" class="claim-camera" playsinline muted autoplay aria-label="Vista de la cámara para escanear el QR" hidden></video>
+<p id="trip-claim-status" class="trip-feedback" role="status" aria-live="polite">Selecciona el beneficio y activa la cámara.</p>
+<section id="trip-claim-result" class="my-order claim-result" aria-labelledby="trip-claim-table" hidden>
+<h3 id="trip-claim-table"></h3>
+<p id="trip-claim-event" class="order-meta"></p>
+<p id="trip-claim-benefit"></p>
+<div class="actions"><button type="button" class="button solid" id="trip-claim-redeem">RECLAMADO</button></div>
+</section>
 </section>
 </section>
 <section id="trip-editor" class="panel-section" aria-labelledby="trip-editor-title" hidden>
