@@ -42,12 +42,7 @@
       },
       "mesas": {
         ".read": true,
-        "$evento": {
-          "$mesa": {
-            ".write": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true && (!data.exists() || !newData.exists() || data.val() === newData.val())",
-            ".validate": "($evento === 'viernes' || $evento === 'sabado') && $mesa.matches(/^([1-9]|[1-7][0-9]|8[0-4])$/) && newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{20}$/) && newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('evento').val() === $evento && newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('mesa').val() === $mesa && newData.parent().parent().parent().child('bloqueados').child(newData.parent().parent().parent().child('solicitudes').child(newData.val()).child('uid').val()).val() !== true"
-          }
-        }
+        ".write": false
       },
       "usuarios": {
         ".read": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true",
@@ -76,6 +71,18 @@
           ".write": "auth != null && auth.token.email_verified === true && root.child('trip/admins').child(auth.uid).val() === true && root.child('trip/admins').child($uid).val() !== true",
           ".validate": "newData.val() === true"
         }
+      },
+      "qrActivos": {
+        ".read": false,
+        ".write": false
+      },
+      "qrHistorial": {
+        ".read": false,
+        ".write": false
+      },
+      "canjeadores": {
+        ".read": false,
+        ".write": false
       }
     }
   }

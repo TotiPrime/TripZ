@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mi cuenta · TRIP Cochabamba</title>
+<link rel="icon" href="./public/assets/trip-logo.png">
+<link rel="stylesheet" href="./public/trip.css">
+</head>
+<body data-trip-panel="cuenta">
+<header class="top">
+  <div class="wrap nav">
+    <a class="brand" href="./index.html"><img src="./public/assets/trip-logo.png" width="68" height="47" alt="TRIP"><span>COCHABAMBA<br>BO</span></a>
+    <a class="button ghost" href="./index.html#mapa" id="trip-back-map">Ir al mapa</a>
+    <a class="button ghost" href="./cuenta.html" id="trip-account" hidden>Mi cuenta</a>
+    <a class="button solid" href="./administracion.html" id="trip-admin-open" hidden>Administración</a>
+  </div>
+</header>
+<main class="panel-page">
+  <p class="eyebrow">TRIP · RESERVAS</p>
+  <h1>Mi cuenta</h1>
+  <p>Consulta tus solicitudes, reservas confirmadas y comprobantes.</p>
+  <div id="trip-panel-content"></div>
+  <noscript>Activa JavaScript para acceder a tu cuenta.</noscript>
+</main>
+<script type="module" src="./panel-trip.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+{
+  "functions": {"source": "functions", "ignore": ["node_modules", ".git", ".secret.local", "*.log"]},
+  "database": {"rules": "database.rules.json"}
+}

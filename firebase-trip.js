@@ -17,20 +17,21 @@ const readableError = error => {
   return 'La operación no se pudo completar. Verifica la conexión e intenta de nuevo.';
 };
 
-export function mountTripFirebase(changed) {
-  const dialog=document.querySelector('#trip-access');
+export function mountTripFirebase(changed=()=>{}) {
+  const panel=document.body.dataset.tripPanel;
+  const adminPage=panel==='admin';
   const form=document.querySelector('#trip-auth');
   const details=document.querySelector('#trip-session');
-  const status=document.querySelector('#trip-access-status');
+  const status=document.querySelector('#trip-access-status') || document.createElement('p');
   const requests=document.querySelector('#trip-requests');
-  const adminDialog=document.querySelector('#trip-admin');
+  const adminSection=document.querySelector('#trip-admin');
   const adminOpen=document.querySelector('#trip-admin-open');
   const adminOrders=document.querySelector('#trip-admin-orders');
   const directory=document.querySelector('#trip-admin-directory');
   const adminFeedback=document.querySelector('#trip-admin-feedback');
   const accountFeedback=document.querySelector('#trip-account-feedback');
   const editor=document.querySelector('#trip-editor');
-  const editorForm=editor.querySelector('form');
+  const editorForm=editor?.querySelector('form');
   const searchRequest=document.querySelector('#trip-search-request');
   const filterState=document.querySelector('#trip-request-state');
   const searchUser=document.querySelector('#trip-search-user');
@@ -62,7 +63,6 @@ export function mountTripFirebase(changed) {
     return button;
   }
 
-  function seatPath(night,seat) { return 'trip/mesas/'+night+'/'+seat; }
   function confirmed(night,seat) { return Boolean(occupied[night]?.[seat]); }
   function requested(night,seat) {
     return !role && Object.values(rows).some(row=>row.evento===night && row.mesa===String(seat));
@@ -70,7 +70,7 @@ export function mountTripFirebase(changed) {
   function ready() {return Boolean(connected && occupancyReady && requestsReady && blocksReady && user?.emailVerified && !role && blocks[user.uid]!==true);}
 
   function notify(message) {
-    (role ? adminFeedback : accountFeedback).textContent=message;
+    (adminPage && role ? adminFeedback : accountFeedback || status).textContent=message;
   }
 
   function summary(row) {
@@ -89,7 +89,7 @@ export function mountTripFirebase(changed) {
 
   function mapLink(row) {
     const link=node('a','Ver mesa en el mapa','button ghost');
-    link.href='?'+new URLSearchParams({evento:row.evento,mesa:row.mesa})+'#mapa';
+    link.href='./index.html?'+new URLSearchParams({evento:row.evento,mesa:row.mesa})+'#mapa';
     return link;
   }
 
@@ -118,20 +118,25 @@ export function mountTripFirebase(changed) {
     submitButton.type='submit';
     const message=node('p','','trip-feedback');
     message.setAttribute('role','status');
-    editorForm.replaceChildren(...fields,message,submitButton);
+    const cancel=node('button','Cancelar','button ghost');
+    cancel.type='button';
+    cancel.addEventListener('click',()=>{editor.hidden=true;});
+    editorForm.replaceChildren(...fields,message,submitButton,cancel);
     editorForm.onsubmit=async event=>{
       event.preventDefault();
       submitButton.disabled=true;
       try {
         await save();
-        editor.close();
+        editor.hidden=true;
       } catch(error) {
         message.textContent=error.code ? readableError(error) : error.message;
       } finally {
         submitButton.disabled=false;
       }
     };
-    editor.showModal();
+    editor.hidden=false;
+    editor.querySelector('h2').focus();
+    editor.scrollIntoView({block:'nearest'});
   }
 
   function field(label,control) {
@@ -170,13 +175,60 @@ export function mountTripFirebase(changed) {
     });
   }
 
+  async function reservationAPI(accion,solicitud,row) {
+    const account=user;
+    const token=await account.getIdToken();
+    if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
+    let response;
+    try {
+      response=await fetch('https://us-central1-'+firebaseConfig.projectId+'.cloudfunctions.net/tripReservas',{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+        body:JSON.stringify({accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0}),
+        signal:AbortSignal.timeout(35000)
+      });
+    } catch {
+      throw new Error('No se pudo conectar al servicio de QR de TRIP.');
+    }
+    const result=await response.json().catch(()=>null);
+    if(!response.ok || !result?.ok) throw new Error(result?.message || 'El servicio de QR de TRIP no está disponible.');
+    if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
+    return result;
+  }
+
+  function showTicket(ticket) {
+    const item=node('section','','ticket');
+    const title=ticket.tipo==='manillas'?'Manillas de ingreso':'Consumo';
+    const benefit=ticket.beneficio;
+    const detail=ticket.tipo==='manillas'?benefit.cantidad+' manillas':
+      benefit.modalidad==='saldo'?benefit.montoBs+' Bs en consumo':benefit.cantidad+' combo · '+benefit.detalle;
+    item.append(node('h5',title+' · Mesa '+ticket.mesa),node('p',detail));
+    if(ticket.estado==='disponible' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(ticket.qr)) {
+      const img=node('img');
+      img.src=ticket.qr;
+      img.alt='QR de '+title.toLowerCase()+' de la mesa '+ticket.mesa;
+      img.width=img.height=288;
+      item.append(img,node('p','Disponible para un solo canje.'));
+    } else if(ticket.estado==='reclamado') {
+      item.append(node('p','Canjeado · '+orderDate.format(ticket.reclamadoEn)));
+    }
+    return item;
+  }
+
   function showRequests() {
+    if(!panel) return;
     requests.replaceChildren();
     adminOrders.replaceChildren();
     if(!user?.emailVerified || !roleResolved) return;
-    const listElement=role?adminOrders:requests;
-    if(role) requests.append(task('Abrir panel de administración',openAdmin));
-    else listElement.append(node('h3','Mis solicitudes y reservas'));
+    if(role && !adminPage) {
+      const link=node('a','Abrir panel de administración','button solid');
+      link.href='./administracion.html';
+      requests.append(link);
+      return;
+    }
+    if(!role && adminPage) return;
+    const listElement=adminPage?adminOrders:requests;
+    if(!adminPage) listElement.append(node('h2','Mis solicitudes y reservas'));
     if(!requestsReady) {
       listElement.append(node('p','Consultando solicitudes…'));
       return;
@@ -206,15 +258,13 @@ export function mountTripFirebase(changed) {
       if(connected && occupancyReady) {
         if(role && state==='sent' && blocksReady && blocks[row.uid]!==true) actions.append(task('Confirmar pago verificado',async()=>{
           if(!confirm('¿Verificaste el pago de la mesa '+row.mesa+'?')) return;
-          const {committed}=await dbModule.runTransaction(dbModule.ref(db,seatPath(row.evento,row.mesa)),value=>value===null?id:undefined,{applyLocally:false});
-          if(!committed) throw new Error('Esa mesa ya está ocupada.');
-          notify('Reserva confirmada. La mesa '+row.mesa+' ya aparece ocupada en el mapa.');
+          await reservationAPI('confirmar',id,row);
+          notify('Reserva confirmada. Los QR están disponibles en la ficha.');
         }));
         if(role && state==='confirmed') actions.append(task('Liberar mesa',async()=>{
           if(!confirm('¿Liberar la mesa? La solicitud quedará sin reserva confirmada.')) return;
-          const {committed}=await dbModule.runTransaction(dbModule.ref(db,seatPath(row.evento,row.mesa)),value=>value===id?null:undefined,{applyLocally:false});
-          if(!committed) throw new Error('La reserva cambió. Revisa el mapa.');
-          notify('Mesa liberada. La solicitud sigue visible sin reserva confirmada.');
+          await reservationAPI('liberar',id,row);
+          notify('Mesa liberada. Los QR anteriores quedaron anulados.');
         }));
         if(state!=='confirmed' && (role || blocksReady)) {
           if(role || blocks[user.uid]!==true) actions.append(task('Cambiar mesa',()=>editRequest(id,row)));
@@ -226,11 +276,22 @@ export function mountTripFirebase(changed) {
         }
       }
       card.append(actions);
+      if(state==='confirmed') {
+        const tickets=node('div','','ticket-grid');
+        tickets.hidden=true;
+        actions.append(task('Ver o actualizar QR',async()=>{
+          const {comprobantes}=await reservationAPI('comprobantes',id,row);
+          tickets.replaceChildren(...comprobantes.map(showTicket));
+          tickets.hidden=false;
+        }));
+        card.append(tickets);
+      }
       listElement.append(card);
     }
   }
 
   function showUsers() {
+    if(!adminPage) return;
     directory.replaceChildren();
     if(!role) return;
     const people=new Map();
@@ -314,7 +375,7 @@ export function mountTripFirebase(changed) {
 
   function accessError(message,error,target=status) {
     target.textContent=isPermissionDenied(error)?message:readableError(error);
-    retryAccess.hidden=false;
+    if(retryAccess) retryAccess.hidden=false;
   }
 
   function subscribeRequests() {
@@ -322,7 +383,7 @@ export function mountTripFirebase(changed) {
     requestsReady=false;
     rows={};
     showRequests();
-    if(!user?.emailVerified) return;
+    if(!user?.emailVerified || (role && !adminPage) || (!role && adminPage)) return;
     const all=dbModule.ref(db,'trip/solicitudes');
     const selected=role?all:dbModule.query(all,dbModule.orderByChild('uid'),dbModule.equalTo(user.uid));
     stopRequests=dbModule.onValue(selected,snapshot=>{
@@ -335,7 +396,7 @@ export function mountTripFirebase(changed) {
       requestsReady=false;
       const message='Firebase rechazó la lectura de las solicitudes. TRIP debe revisar las reglas de trip/solicitudes.';
       accessError(message,error);
-      if(role) adminFeedback.textContent=status.textContent;
+      if(adminPage && role) adminFeedback.textContent=status.textContent;
       changed();
     });
   }
@@ -346,6 +407,7 @@ export function mountTripFirebase(changed) {
     blocksReady=profilesReady=false;
     blocks={};
     profiles={};
+    if((role && !adminPage) || (!role && adminPage)) return;
     const blockPath=role?'trip/bloqueados':'trip/bloqueados/'+account.uid;
     stopBlocks=dbModule.onValue(dbModule.ref(db,blockPath),snapshot=>{
       if(version!==generation) return;
@@ -355,9 +417,9 @@ export function mountTripFirebase(changed) {
       showUsers();
       changed();
     },error=>{
-      if(version===generation) accessError('Firebase rechazó la consulta de bloqueos. TRIP debe publicar las reglas de trip/bloqueados.',error,role?adminFeedback:accountFeedback);
+      if(panel && version===generation) accessError('Firebase rechazó la consulta de bloqueos. TRIP debe publicar las reglas de trip/bloqueados.',error,adminPage && role?adminFeedback:accountFeedback);
     });
-    if(role) {
+    if(adminPage && role) {
       stopProfiles=dbModule.onValue(dbModule.ref(db,'trip/usuarios'),snapshot=>{
         if(version!==generation) return;
         profiles=snapshot.val() || {};
@@ -366,7 +428,7 @@ export function mountTripFirebase(changed) {
       },error=>{
         if(version===generation) accessError('Firebase rechazó la lectura del directorio. TRIP debe publicar las reglas de trip/usuarios.',error,adminFeedback);
       });
-    } else {
+    } else if(panel==='cuenta' && !role) {
       const ref=dbModule.ref(db,'trip/usuarios/'+account.uid);
       stopProfiles=dbModule.onValue(ref,async snapshot=>{
         if(version!==generation || role || snapshot.exists()) return;
@@ -382,7 +444,7 @@ export function mountTripFirebase(changed) {
   }
 
   function setAdminView(view) {
-    for(const button of adminDialog.querySelectorAll('[data-admin-view]')) {
+    for(const button of adminSection.querySelectorAll('[data-admin-view]')) {
       const selected=button.dataset.adminView===view;
       button.setAttribute('aria-pressed',String(selected));
       button.classList.toggle('solid',selected);
@@ -391,13 +453,6 @@ export function mountTripFirebase(changed) {
     }
     showRequests();
     showUsers();
-  }
-
-  function openAdmin() {
-    if(!role) return;
-    dialog.close();
-    setAdminView('requests');
-    adminDialog.showModal();
   }
 
   function showSession(account,forceToken=false) {
@@ -412,15 +467,16 @@ export function mountTripFirebase(changed) {
     blocks={};
     profiles={};
     adminOpen.hidden=true;
-    adminDialog.close();
-    editor.close();
-    adminFeedback.textContent=accountFeedback.textContent='';
-    searchRequest.value=searchUser.value=filterState.value='';
-    showUsers();
-    form.hidden=Boolean(user);
-    details.hidden=!user;
-    verify.hidden=reload.hidden=!user || user.emailVerified;
-    retryAccess.hidden=true;
+    if(panel) {
+      adminSection.hidden=editor.hidden=true;
+      adminFeedback.textContent=accountFeedback.textContent='';
+      searchRequest.value=searchUser.value=filterState.value='';
+      showUsers();
+      form.hidden=Boolean(user);
+      details.hidden=!user;
+      verify.hidden=reload.hidden=!user || user.emailVerified;
+      retryAccess.hidden=true;
+    }
     status.textContent=!user?'Inicia sesión o crea tu cuenta con correo electrónico.':user.emailVerified?'Cuenta de '+user.email:'Verifica tu correo antes de solicitar una mesa.';
     showRequests();
     changed();
@@ -441,12 +497,13 @@ export function mountTripFirebase(changed) {
       if(version!==generation) return;
       role=snapshot.val()===true;
       roleResolved=true;
-      adminOpen.hidden=!role;
-      if(!role && adminDialog.open) {
-        editor.close();
-        adminDialog.close();
+      adminOpen.hidden=!role || adminPage;
+      if(panel) {
+        adminSection.hidden=!adminPage || !role;
+        if(!role && adminPage) editor.hidden=true;
       }
-      status.textContent=role?'Sesión de administración · '+user.email:'Cuenta de '+user.email;
+      status.textContent=role?'Sesión de administración · '+user.email:
+        adminPage?'Esta cuenta no tiene permisos de administración.':'Cuenta de '+user.email;
       subscribeRequests();
       subscribeProfiles(user,version);
       changed();
@@ -460,33 +517,36 @@ export function mountTripFirebase(changed) {
     });
   }
 
-  retryAccess.addEventListener('click',()=>{
-    if(auth.currentUser) showSession(auth.currentUser,true);
-  });
-  document.querySelector('#trip-account').addEventListener('click',()=>dialog.showModal());
-  dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
-  adminOpen.addEventListener('click',openAdmin);
-  for(const popup of [adminDialog,editor]) popup.querySelector('.close').addEventListener('click',()=>popup.close());
-  for(const button of adminDialog.querySelectorAll('[data-admin-view]')) button.addEventListener('click',()=>setAdminView(button.dataset.adminView));
-  searchRequest.addEventListener('input',showRequests);
-  filterState.addEventListener('change',showRequests);
-  searchUser.addEventListener('input',showUsers);
-  form.addEventListener('submit',submit);
-  document.querySelector('#trip-signout').addEventListener('click',async()=>{
-    try{await authModule.signOut(auth);}catch(error){status.textContent=readableError(error);}
-  });
-  verify.addEventListener('click',async()=>{
-    try{await authModule.sendEmailVerification(user);status.textContent='Correo de verificación enviado.';}
-    catch(error){status.textContent=readableError(error);}
-  });
-  reload.addEventListener('click',async()=>{
-    try{
-      const account=user;
-      await account.reload();
-      await account.getIdToken(true);
-      if(auth.currentUser?.uid===account.uid) showSession(auth.currentUser);
-    }catch(error){status.textContent=readableError(error);}
-  });
+  if(panel) {
+    retryAccess.addEventListener('click',()=>{
+      if(auth.currentUser) showSession(auth.currentUser,true);
+    });
+    for(const button of adminSection.querySelectorAll('[data-admin-view]')) button.addEventListener('click',()=>setAdminView(button.dataset.adminView));
+    searchRequest.addEventListener('input',showRequests);
+    filterState.addEventListener('change',showRequests);
+    searchUser.addEventListener('input',showUsers);
+    form.addEventListener('submit',submit);
+    if(adminPage) form.querySelector('[value=register]').hidden=true;
+    const target=new URLSearchParams(location.search);
+    if(Object.hasOwn(events,target.get('evento')) && /^([1-9]|[1-7][0-9]|8[0-4])$/.test(target.get('mesa') || '')) {
+      document.querySelector('#trip-back-map').href='./index.html?'+new URLSearchParams({evento:target.get('evento'),mesa:target.get('mesa')})+'#mapa';
+    }
+    document.querySelector('#trip-signout').addEventListener('click',async()=>{
+      try{await authModule.signOut(auth);}catch(error){status.textContent=readableError(error);}
+    });
+    verify.addEventListener('click',async()=>{
+      try{await authModule.sendEmailVerification(user);status.textContent='Correo de verificación enviado.';}
+      catch(error){status.textContent=readableError(error);}
+    });
+    reload.addEventListener('click',async()=>{
+      try{
+        const account=user;
+        await account.reload();
+        await account.getIdToken(true);
+        if(auth.currentUser?.uid===account.uid) showSession(auth.currentUser);
+      }catch(error){status.textContent=readableError(error);}
+    });
+  }
 
   async function initialize() {
     status.textContent='Comprobando la conexión de reservas…';
@@ -530,13 +590,15 @@ export function mountTripFirebase(changed) {
       dbModule.onValue(publicMap,snapshot=>{
         occupancyReady=true;
         occupied=snapshot.val() || {};
-        document.querySelector('#map-notice').textContent='El mapa muestra las mesas que TRIP ya confirmó.';
+        const mapNotice=document.querySelector('#map-notice');
+        if(mapNotice) mapNotice.textContent='El mapa muestra las mesas que TRIP ya confirmó.';
         showRequests();
         changed();
       },()=>{
         occupancyReady=false;
         showRequests();
-        document.querySelector('#map-notice').textContent='No se pudo verificar la disponibilidad. Puedes consultar a TRIP directamente.';
+        const mapNotice=document.querySelector('#map-notice');
+        if(mapNotice) mapNotice.textContent='No se pudo verificar la disponibilidad. Puedes consultar a TRIP directamente.';
         changed();
       });
       authModule.onAuthStateChanged(auth,account=>showSession(account),error=>{status.textContent=readableError(error);});
