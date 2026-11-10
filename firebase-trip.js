@@ -1,4 +1,5 @@
 import { firebaseConfig } from './firebase-config.js';
+import { qrApiBase } from './qr-config.js';
 import { events } from './public/catalog.js';
 import { floorPlan } from './public/plan.js';
 
@@ -179,9 +180,10 @@ export function mountTripFirebase(changed=()=>{}) {
     const account=user;
     const token=await account.getIdToken();
     if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
+    if(!qrApiBase.startsWith('https://')) throw new Error('Falta configurar el servicio QR gratuito de TRIP.');
     let response;
     try {
-      response=await fetch('https://us-central1-'+firebaseConfig.projectId+'.cloudfunctions.net/tripReservas',{
+      response=await fetch(qrApiBase.replace(/\/+$/,'')+'/tripReservas',{
         method:'POST',
         headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
         body:JSON.stringify({accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0}),
@@ -196,16 +198,17 @@ export function mountTripFirebase(changed=()=>{}) {
     return result;
   }
 
-  function showTicket(ticket) {
+  async function showTicket(ticket) {
     const item=node('section','','ticket');
     const title=ticket.tipo==='manillas'?'Manillas de ingreso':'Consumo';
     const benefit=ticket.beneficio;
     const detail=ticket.tipo==='manillas'?benefit.cantidad+' manillas':
       benefit.modalidad==='saldo'?benefit.montoBs+' Bs en consumo':benefit.cantidad+' combo · '+benefit.detalle;
     item.append(node('h5',title+' · Mesa '+ticket.mesa),node('p',detail));
-    if(ticket.estado==='disponible' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(ticket.qr)) {
+    if(ticket.estado==='disponible' && /^TRIP1\.[A-Za-z0-9_-]{43}$/.test(ticket.codigo)) {
+      const {renderQr}=await import('./public/qr-browser.js');
       const img=node('img');
-      img.src=ticket.qr;
+      img.src=await renderQr(ticket.codigo);
       img.alt='QR de '+title.toLowerCase()+' de la mesa '+ticket.mesa;
       img.width=img.height=288;
       item.append(img,node('p','Disponible para un solo canje.'));
@@ -281,7 +284,7 @@ export function mountTripFirebase(changed=()=>{}) {
         tickets.hidden=true;
         actions.append(task('Ver o actualizar QR',async()=>{
           const {comprobantes}=await reservationAPI('comprobantes',id,row);
-          tickets.replaceChildren(...comprobantes.map(showTicket));
+          tickets.replaceChildren(...await Promise.all(comprobantes.map(showTicket)));
           tickets.hidden=false;
         }));
         card.append(tickets);

@@ -1,0 +1,11 @@
+{
+  "name": "tripz-qr-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "qr-browser": "esbuild qr-browser.js --bundle --minify --format=esm --outfile=../public/qr-browser.js"
+  },
+  "dependencies": {"jose": "^6.1.0", "qrcode": "^1.5.4"},
+  "devDependencies": {"esbuild":"^0.25.0", "wrangler":"^4.54.0"}
+}

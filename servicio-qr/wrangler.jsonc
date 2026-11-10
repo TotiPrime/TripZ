@@ -1,0 +1,14 @@
+{
+  "name": "tripz-qr",
+  "main": "index.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "vars": {
+    "FIREBASE_PROJECT_ID": "trip-76b7e",
+    "FIREBASE_DATABASE_URL": "https://trip-76b7e-default-rtdb.firebaseio.com",
+    "WEB_ORIGIN": "https://totiprime.github.io"
+  }
+}

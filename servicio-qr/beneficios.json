@@ -1,0 +1,688 @@
+{
+  "viernes": {
+    "titulo": "Festi Cumbia Vol. 1",
+    "fecha": "2026-11-13",
+    "manillas": 0,
+    "mesas": {
+      "1": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "2": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "3": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "4": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "5": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "6": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "7": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "8": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "9": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "10": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "11": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "12": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "13": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "14": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "15": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "16": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "17": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "18": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "19": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "20": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "21": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "22": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "23": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "24": {
+        "zona": "Primeras filas",
+        "precio": 800
+      },
+      "25": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "26": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "27": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "28": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "29": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "30": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "31": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "32": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "33": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "34": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "35": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "36": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "37": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "38": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "39": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "40": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "41": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "42": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "43": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "44": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "45": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "46": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "47": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "48": {
+        "zona": "VIP",
+        "precio": 500
+      },
+      "49": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "50": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "51": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "52": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "53": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "54": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "55": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "56": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "57": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "58": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "59": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "60": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "61": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "62": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "63": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "64": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "65": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "66": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "67": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "68": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "69": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "70": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "71": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "72": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "73": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "74": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "75": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "76": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "77": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "78": {
+        "zona": "Súper VIP",
+        "precio": 600
+      },
+      "79": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      },
+      "80": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      },
+      "81": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      },
+      "82": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      },
+      "83": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      },
+      "84": {
+        "zona": "Mezanine Camarote",
+        "precio": 700
+      }
+    }
+  },
+  "sabado": {
+    "titulo": "Rodeó Fest",
+    "fecha": "2026-11-14",
+    "manillas": 5,
+    "mesas": {
+      "1": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "2": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "3": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "4": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "5": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "6": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "7": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "8": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "9": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "10": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "11": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "12": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "13": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "14": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "15": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "16": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "17": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "18": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "19": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "20": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "21": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "22": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "23": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "24": {
+        "zona": "Súper VIP Primeras filas",
+        "precio": 900
+      },
+      "25": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "26": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "27": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "28": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "29": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "30": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "31": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "32": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "33": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "34": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "35": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "36": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "37": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "38": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "39": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "40": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "41": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "42": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "43": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "44": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "45": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "46": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "47": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "48": {
+        "zona": "Súper VIP Terraza",
+        "precio": 800
+      },
+      "49": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "50": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "51": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "52": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "53": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "54": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "55": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "56": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "57": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "58": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "59": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "60": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "61": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "62": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "63": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "64": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "65": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "66": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "67": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "68": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "69": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "70": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "71": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "72": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "73": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "74": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "75": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "76": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "77": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "78": {
+        "zona": "VIP",
+        "precio": 750
+      },
+      "79": {
+        "zona": "Camarote",
+        "precio": 950
+      },
+      "80": {
+        "zona": "Camarote",
+        "precio": 950
+      },
+      "81": {
+        "zona": "Camarote",
+        "precio": 950
+      },
+      "82": {
+        "zona": "Camarote",
+        "precio": 950
+      },
+      "83": {
+        "zona": "Camarote",
+        "precio": 950
+      },
+      "84": {
+        "zona": "Camarote",
+        "precio": 950
+      }
+    }
+  }
+}
