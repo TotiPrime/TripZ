@@ -3,6 +3,7 @@ import { events } from './public/catalog.js';
 import { floorPlan } from './public/plan.js';
 
 const base = 'https://www.gstatic.com/firebasejs/13.2.0/';
+const isPermissionDenied = error => /permission.denied/i.test(error.code || error.message || '');
 const orderDate = new Intl.DateTimeFormat('es-BO',{dateStyle:'medium',timeStyle:'short',timeZone:'America/La_Paz'});
 const readableError = error => {
   const code=error.code || '';
@@ -12,7 +13,7 @@ const readableError = error => {
   if (code === 'auth/unauthorized-domain') return 'Autoriza el dominio de TripZ en Firebase Authentication.';
   if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') return 'Habilita Correo electrónico/contraseña en Firebase Authentication.';
   if (code === 'auth/weak-password') return 'La contraseña no cumple la política de Firebase.';
-  if (/permission.denied/i.test(code)) return 'Firebase denegó la operación. Revisa tu acceso y las reglas.';
+  if (isPermissionDenied(error)) return 'Firebase denegó la operación. Revisa tu acceso y las reglas.';
   return 'La operación no se pudo completar. Verifica la conexión e intenta de nuevo.';
 };
 
@@ -35,6 +36,7 @@ export function mountTripFirebase(changed) {
   const searchUser=document.querySelector('#trip-search-user');
   const verify=document.querySelector('#trip-verify');
   const reload=document.querySelector('#trip-reload-user');
+  const retryAccess=document.querySelector('#trip-retry-access');
   let authModule,dbModule,auth,db,user;
   let role=false,connected=false,occupancyReady=false,requestsReady=false,occupied={},rows={};
   let roleResolved=false,blocksReady=false,profilesReady=false,blocks={},profiles={};
@@ -310,6 +312,11 @@ export function mountTripFirebase(changed) {
     finally {button.disabled=false;}
   }
 
+  function accessError(message,error,target=status) {
+    target.textContent=isPermissionDenied(error)?message:readableError(error);
+    retryAccess.hidden=false;
+  }
+
   function subscribeRequests() {
     stopRequests?.();
     requestsReady=false;
@@ -324,7 +331,13 @@ export function mountTripFirebase(changed) {
       showRequests();
       showUsers();
       changed();
-    },error=>{requestsReady=false;status.textContent=readableError(error);notify(readableError(error));changed();});
+    },error=>{
+      requestsReady=false;
+      const message='Firebase rechazó la lectura de las solicitudes. TRIP debe revisar las reglas de trip/solicitudes.';
+      accessError(message,error);
+      if(role) adminFeedback.textContent=status.textContent;
+      changed();
+    });
   }
 
   function subscribeProfiles(account,version) {
@@ -341,19 +354,25 @@ export function mountTripFirebase(changed) {
       showRequests();
       showUsers();
       changed();
-    },error=>{if(version===generation) notify(readableError(error));});
+    },error=>{
+      if(version===generation) accessError('Firebase rechazó la consulta de bloqueos. TRIP debe publicar las reglas de trip/bloqueados.',error,role?adminFeedback:accountFeedback);
+    });
     if(role) {
       stopProfiles=dbModule.onValue(dbModule.ref(db,'trip/usuarios'),snapshot=>{
         if(version!==generation) return;
         profiles=snapshot.val() || {};
         profilesReady=true;
         showUsers();
-      },error=>{if(version===generation) notify(readableError(error));});
+      },error=>{
+        if(version===generation) accessError('Firebase rechazó la lectura del directorio. TRIP debe publicar las reglas de trip/usuarios.',error,adminFeedback);
+      });
     } else {
       const ref=dbModule.ref(db,'trip/usuarios/'+account.uid);
       dbModule.get(ref).then(snapshot=>{
         if(version===generation && !role && !snapshot.exists()) return dbModule.set(ref,{correo:account.email});
-      }).catch(error=>{if(version===generation) notify(readableError(error));});
+      }).catch(error=>{
+        if(version===generation) accessError('Firebase rechazó el acceso a tu ficha. TRIP debe revisar las reglas de trip/usuarios.',error,accountFeedback);
+      });
     }
   }
 
@@ -376,7 +395,7 @@ export function mountTripFirebase(changed) {
     adminDialog.showModal();
   }
 
-  function showSession(account) {
+  function showSession(account,forceToken=false) {
     user=account;
     const version=++generation;
     stopRole?.();
@@ -396,11 +415,24 @@ export function mountTripFirebase(changed) {
     form.hidden=Boolean(user);
     details.hidden=!user;
     verify.hidden=reload.hidden=!user || user.emailVerified;
+    retryAccess.hidden=true;
     status.textContent=!user?'Inicia sesión o crea tu cuenta con correo electrónico.':user.emailVerified?'Cuenta de '+user.email:'Verifica tu correo antes de solicitar una mesa.';
     showRequests();
     changed();
     if(!user?.emailVerified) return;
-    stopRole=dbModule.onValue(dbModule.ref(db,'trip/admins/'+user.uid),snapshot=>{
+    status.textContent='Comprobando el acceso de '+account.email+'…';
+    watchRole(account,version,forceToken);
+  }
+
+  async function watchRole(account,version,forceToken) {
+    try {
+      await account.getIdToken(forceToken);
+    } catch(error) {
+      if(version===generation) accessError('Firebase rechazó el acceso de esta sesión.',error);
+      return;
+    }
+    if(version!==generation) return;
+    stopRole=dbModule.onValue(dbModule.ref(db,'trip/admins/'+account.uid),snapshot=>{
       if(version!==generation) return;
       role=snapshot.val()===true;
       roleResolved=true;
@@ -413,9 +445,19 @@ export function mountTripFirebase(changed) {
       subscribeRequests();
       subscribeProfiles(user,version);
       changed();
-    },error=>{if(version===generation)status.textContent=readableError(error);});
+    },error=>{
+      if(version!==generation) return;
+      if(!forceToken && isPermissionDenied(error)) {
+        watchRole(account,version,true);
+        return;
+      }
+      accessError('Tu sesión está iniciada, pero Firebase rechazó la lectura del rol. TRIP debe revisar la regla de lectura de trip/admins/$uid.',error);
+    });
   }
 
+  retryAccess.addEventListener('click',()=>{
+    if(auth.currentUser) showSession(auth.currentUser,true);
+  });
   document.querySelector('#trip-account').addEventListener('click',()=>dialog.showModal());
   dialog.querySelector('.close').addEventListener('click',()=>dialog.close());
   adminOpen.addEventListener('click',openAdmin);
@@ -456,7 +498,7 @@ export function mountTripFirebase(changed) {
       const privateProbe=dbModule.get(dbModule.ref(db,randomPath)).then(
         () => false,
         error => {
-          if (/permission.denied/i.test(error.code || error.message)) return true;
+          if (isPermissionDenied(error)) return true;
           throw error;
         }
       );
@@ -492,7 +534,7 @@ export function mountTripFirebase(changed) {
         document.querySelector('#map-notice').textContent='No se pudo verificar la disponibilidad. Puedes consultar a TRIP directamente.';
         changed();
       });
-      authModule.onAuthStateChanged(auth,showSession,error=>{status.textContent=readableError(error);});
+      authModule.onAuthStateChanged(auth,account=>showSession(account),error=>{status.textContent=readableError(error);});
     }catch(error){status.textContent=readableError(error);}
   }
 
