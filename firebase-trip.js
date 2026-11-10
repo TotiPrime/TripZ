@@ -368,11 +368,16 @@ export function mountTripFirebase(changed) {
       });
     } else {
       const ref=dbModule.ref(db,'trip/usuarios/'+account.uid);
-      dbModule.get(ref).then(snapshot=>{
-        if(version===generation && !role && !snapshot.exists()) return dbModule.set(ref,{correo:account.email});
-      }).catch(error=>{
-        if(version===generation) accessError('Firebase rechazó el acceso a tu ficha. TRIP debe revisar las reglas de trip/usuarios.',error,accountFeedback);
-      });
+      stopProfiles=dbModule.onValue(ref,async snapshot=>{
+        if(version!==generation || role || snapshot.exists()) return;
+        try {
+          await dbModule.runTransaction(ref,current=>current===null?{correo:account.email}:undefined,{applyLocally:false});
+        } catch(error) {
+          if(version===generation) accessError('Firebase no pudo crear tu ficha en trip/usuarios. Tus solicitudes siguen disponibles.',error,accountFeedback);
+        }
+      },error=>{
+        if(version===generation) accessError('Firebase rechazó la lectura de tu ficha en trip/usuarios. Tus solicitudes siguen disponibles.',error,accountFeedback);
+      },{onlyOnce:true});
     }
   }
 
