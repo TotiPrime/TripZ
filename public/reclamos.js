@@ -1,6 +1,6 @@
 const tripCode = /^TRIP1\.[A-Za-z0-9_-]{43}$/;
-const initial = 'Selecciona el beneficio y activa la cámara.';
-const labels = {saldo:'Consumo',combo:'Combo',manillas:'Manillas'};
+const initial = 'Activa la cámara y enfoca un QR de TRIP.';
+const labels = {saldo:'consumo',combo:'combo',manillas:'manillas'};
 
 function benefitLabel(kind,benefit) {
   if(kind==='manillas') return benefit.cantidad+' manillas de ingreso';
@@ -18,7 +18,6 @@ function cameraError(error) {
 }
 
 export function mountClaims(section,request) {
-  const kind=section.querySelector('#trip-claim-kind');
   const start=section.querySelector('#trip-claim-start');
   const stop=section.querySelector('#trip-claim-stop');
   const video=section.querySelector('#trip-claim-camera');
@@ -36,7 +35,6 @@ export function mountClaims(section,request) {
     stop.hidden=!cameraPending;
     start.disabled=cameraPending || phase==='validating' || phase==='redeeming';
     start.textContent=ticket?'Escanear otro QR':'Activar cámara';
-    kind.disabled=phase==='validating' || phase==='redeeming';
     result.hidden=!ticket;
     redeem.disabled=phase!=='ready';
   }
@@ -60,28 +58,23 @@ export function mountClaims(section,request) {
 
   async function validate(code) {
     const current=generation;
-    const selected=kind.value;
-    const type=selected==='manillas'?'manillas':'consumo';
     stopCamera();
     phase='validating';
     status.textContent='Verificando el QR…';
     paint();
     try {
-      const checked=await request('validar',type,code);
+      const checked=await request('validar',code);
       if(current!==generation) return;
-      const actual=checked.tipo==='manillas'?'manillas':checked.beneficio?.modalidad;
+      const actual=checked.tipo==='consumo'?checked.beneficio?.modalidad:checked.tipo;
       if(checked.estado!=='disponible' || !Object.hasOwn(labels,actual)) {
         throw new Error('El QR no está disponible para canje.');
       }
-      if(actual!==selected) {
-        throw new Error('Este QR corresponde a '+labels[actual]+'. Selecciona ese tipo y vuelve a escanear.');
-      }
-      ticket={code,type};
+      ticket={code};
       table.textContent='Mesa '+checked.mesa;
       event.textContent=checked.titulo+' · '+checked.zona;
       benefit.textContent=benefitLabel(actual,checked.beneficio);
       phase='ready';
-      status.textContent='QR válido. Pulsa RECLAMADO para registrar la entrega.';
+      status.textContent='Válido para '+labels[actual]+'. Pulsa RECLAMADO para registrar la entrega.';
       paint();
     } catch(error) {
       if(current===generation) reset(error.message);
@@ -151,7 +144,7 @@ export function mountClaims(section,request) {
     status.textContent='Registrando el canje…';
     paint();
     try {
-      const response=await request('canjear',ticket.type,ticket.code);
+      const response=await request('canjear',ticket.code);
       if(current!==generation) return;
       if(response.estado!=='reclamado') throw new Error('No se confirmó el canje. Revisa el código antes de entregar.');
       phase='done';
@@ -169,7 +162,6 @@ export function mountClaims(section,request) {
   });
 
   stop.addEventListener('click',()=>reset('Cámara detenida. Puedes activarla nuevamente.'));
-  kind.addEventListener('change',()=>reset());
   window.addEventListener('pagehide',()=>reset());
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden && (phase==='scanning' || phase==='opening')) reset('Cámara detenida al salir de esta pestaña.');
