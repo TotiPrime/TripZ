@@ -1,6 +1,7 @@
 import { firebaseConfig } from './firebase-config.js';
 import { qrApiBase } from './qr-config.js';
-import { mountClaims } from './public/reclamos.js';
+import { mountClaims } from './public/reclamos.js?v=ventas-2';
+import { mountSales, paymentFields } from './public/ventas-ui.js?v=ventas-2';
 import { events } from './public/catalog.js';
 import { floorPlan } from './public/plan.js';
 
@@ -40,16 +41,29 @@ export function mountTripFirebase(changed=()=>{}) {
   const verify=document.querySelector('#trip-verify');
   const reload=document.querySelector('#trip-reload-user');
   const retryAccess=document.querySelector('#trip-retry-access');
+  const personalSection=document.querySelector('#trip-personal-profile');
+  const personalForm=document.querySelector('#trip-profile-form');
+  const personalStatus=document.querySelector('#trip-profile-status');
+  const carnetHint=document.querySelector('#trip-profile-carnet');
+  const pendingRefresh=document.querySelector('#trip-refresh-pending');
   let authModule,dbModule,auth,db,user;
   let role=false,connected=false,occupancyReady=false,requestsReady=false,occupied={},rows={};
+  let seller=false,profileComplete=false;
   let roleResolved=false,blocksReady=false,profilesReady=false,blocks={},profiles={};
   let generation=0;
-  let stopRole,stopRequests,stopBlocks,stopProfiles;
+  let stopRole,stopSeller,stopRequests,stopBlocks,stopProfiles,stopPersonalFlag;
   const claimsSection=adminPage && document.querySelector('#trip-admin-claims');
-  const scanner=claimsSection?mountClaims(claimsSection,(accion,tipo,codigo)=>{
-    if(!role || !user?.emailVerified) throw new Error('El canje requiere una cuenta administradora verificada.');
-    return qrRequest('tripCanjes',{accion,tipo,codigo});
+  const scanner=claimsSection?mountClaims(claimsSection,(accion,codigo)=>{
+    if(!staff() || !user?.emailVerified) throw new Error('El canje requiere una cuenta del equipo verificada.');
+    return qrRequest('tripCanjes',{accion,codigo});
   }):null;
+
+  const salesSection=adminPage && document.querySelector('#trip-admin-sales');
+  const salesUI=salesSection?mountSales(salesSection,input=>qrRequest('tripVentas',input),{
+    isAdmin:()=>role,occupied:confirmed,onRegistered:()=>{if(seller) void loadPending();},formatDate:value=>orderDate.format(value)
+  }):null;
+
+  function staff() {return role || seller;}
 
   function node(tag,text,css) {
     const element=document.createElement(tag);
@@ -72,12 +86,12 @@ export function mountTripFirebase(changed=()=>{}) {
 
   function confirmed(night,seat) { return Boolean(occupied[night]?.[seat]); }
   function requested(night,seat) {
-    return !role && Object.values(rows).some(row=>row.evento===night && row.mesa===String(seat));
+    return !staff() && Object.values(rows).some(row=>row.evento===night && row.mesa===String(seat));
   }
-  function ready() {return Boolean(connected && occupancyReady && requestsReady && blocksReady && user?.emailVerified && !role && blocks[user.uid]!==true);}
+  function ready() {return Boolean(connected && occupancyReady && requestsReady && blocksReady && user?.emailVerified && !staff() && profileComplete && blocks[user.uid]!==true);}
 
   function notify(message) {
-    (adminPage && role ? adminFeedback : accountFeedback || status).textContent=message;
+    (adminPage && staff() ? adminFeedback : accountFeedback || status).textContent=message;
   }
 
   function summary(row) {
@@ -183,6 +197,9 @@ export function mountTripFirebase(changed=()=>{}) {
   }
 
   async function qrRequest(endpoint,payload) {
+    if(endpoint!=='tripPerfiles' && !profileComplete) {
+      throw new Error('Completa nombre, apellido y carnet en Mi perfil.');
+    }
     const account=user;
     const token=await account.getIdToken();
     if(user!==account) throw new Error('La sesión cambió. Vuelve a abrir tu cuenta.');
@@ -208,13 +225,38 @@ export function mountTripFirebase(changed=()=>{}) {
     return result;
   }
 
-  function reservationAPI(accion,solicitud,row) {
-    return qrRequest('tripReservas',{accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0});
+  function reservationAPI(accion,solicitud,row,extra={}) {
+    return qrRequest('tripReservas',{...extra,accion,solicitud,evento:row.evento,mesa:row.mesa,revision:row.revision??0});
+  }
+
+  function recordPayment(id,row) {
+    edit('Registrar pago de la mesa '+row.mesa,paymentFields(),async()=>{
+      const payment=Object.fromEntries(new FormData(editorForm));
+      await reservationAPI('confirmar',id,row,payment);
+      if(seller) void loadPending();
+      notify('Venta confirmada. El cliente puede ver sus QR.');
+    });
+  }
+
+  function moveConfirmed(id,row) {
+    const target=node('select');
+    target.required=true;
+    target.append(new Option('Selecciona una mesa disponible',''));
+    const {zone,event}=summary(row);
+    for(const seat of floorPlan(row.evento).sort((a,b)=>a.number-b.number)) {
+      const available=event.zones.find(item=>item[0]===seat.zone);
+      if(available[2]!==zone[2] || confirmed(row.evento,seat.number)) continue;
+      target.append(new Option('Mesa '+seat.number+' · '+available[1],String(seat.number)));
+    }
+    edit('Cambiar mesa confirmada',[field('Otra mesa de la misma tarifa',target)],async()=>{
+      await reservationAPI('mover',id,row,{nuevaMesa:target.value});
+      notify('Mesa cambiada. El cliente puede abrir los QR de la nueva mesa.');
+    });
   }
 
   async function showTicket(ticket) {
     const item=node('section','','ticket');
-    const title=ticket.tipo==='manillas'?'Manillas de ingreso':'Consumo';
+    const title=ticket.tipo==='manillas'?'Manillas de ingreso':ticket.beneficio.modalidad==='combo'?'Combo':'Consumo';
     const benefit=ticket.beneficio;
     const detail=ticket.tipo==='manillas'?benefit.cantidad+' manillas':
       benefit.modalidad==='saldo'?benefit.montoBs+' Bs en consumo':benefit.cantidad+' combo · '+benefit.detalle;
@@ -236,24 +278,24 @@ export function mountTripFirebase(changed=()=>{}) {
     if(!panel) return;
     requests.replaceChildren();
     adminOrders.replaceChildren();
-    if(!user?.emailVerified || !roleResolved) return;
-    if(role && !adminPage) {
-      const link=node('a','Abrir panel de administración','button solid');
+    if(!user?.emailVerified || !roleResolved || !profileComplete) return;
+    if(staff() && !adminPage) {
+      const link=node('a','Abrir panel de TRIP','button solid');
       link.href='./administracion.html';
       requests.append(link);
       return;
     }
-    if(!role && adminPage) return;
+    if(!staff() && adminPage) return;
     const listElement=adminPage?adminOrders:requests;
     if(!adminPage) listElement.append(node('h2','Mis solicitudes y reservas'));
     if(!requestsReady) {
       listElement.append(node('p','Consultando solicitudes…'));
       return;
     }
-    if(!role && blocks[user.uid]===true) listElement.append(node('p','TRIP desactivó las nuevas solicitudes para esta cuenta. Puedes consultar tus reservas y retirar solicitudes sin confirmar.'));
+    if(!staff() && blocks[user.uid]===true) listElement.append(node('p','TRIP desactivó las nuevas solicitudes para esta cuenta. Puedes consultar tus reservas y retirar solicitudes sin confirmar.'));
     const query=searchRequest.value.trim().toLowerCase();
     const list=Object.entries(rows).sort((a,b)=>b[1].creada-a[1].creada)
-      .filter(([id,row])=>!role || ((!filterState.value || filterState.value===requestState(id,row)[0]) &&
+      .filter(([id,row])=>!staff() || ((!filterState.value || filterState.value===requestState(id,row)[0]) &&
         [row.correo,row.uid,id,row.mesa,'mesa '+row.mesa,events[row.evento].title].some(text=>text.toLowerCase().includes(query))));
     if(!list.length) listElement.append(node('p',Object.keys(rows).length?'No hay solicitudes que coincidan con el filtro.':'Todavía no hay solicitudes.'));
     for(const [id,row] of list) {
@@ -269,22 +311,21 @@ export function mountTripFirebase(changed=()=>{}) {
       const date=orderDate.format(row.creada);
       card.append(header,node('p','Tarifa de la mesa · '+zone[2]+' Bs'),node('p',zone[3],'order-meta'),
         node('p',description),node('p','Enviada el '+date+' · Referencia '+id,'order-meta'));
-      if(role) card.append(node('p','Cliente · '+row.correo,'order-meta'));
+      if(staff()) card.append(node('p','Cliente · '+row.correo,'order-meta'));
       const actions=node('div','','actions');
       actions.append(mapLink(row));
       if(connected && occupancyReady) {
-        if(role && state==='sent' && blocksReady && blocks[row.uid]!==true) actions.append(task('Confirmar pago verificado',async()=>{
-          if(!confirm('¿Verificaste el pago de la mesa '+row.mesa+'?')) return;
-          await reservationAPI('confirmar',id,row);
-          notify('Reserva confirmada. Los QR están disponibles en la ficha.');
-        }));
+        if(staff() && state==='sent' && (seller || blocksReady) && blocks[row.uid]!==true) {
+          actions.append(task('Registrar pago y confirmar',()=>recordPayment(id,row)));
+        }
+        if(role && state==='confirmed') actions.append(task('Cambiar mesa',()=>moveConfirmed(id,row)));
         if(role && state==='confirmed') actions.append(task('Liberar mesa',async()=>{
           if(!confirm('¿Liberar la mesa? La solicitud quedará sin reserva confirmada.')) return;
           await reservationAPI('liberar',id,row);
           notify('Mesa liberada. Los QR anteriores quedaron anulados.');
         }));
-        if(state!=='confirmed' && (role || blocksReady)) {
-          if(role || blocks[user.uid]!==true) actions.append(task('Cambiar mesa',()=>editRequest(id,row)));
+        if(state!=='confirmed' && (role || (!staff() && blocksReady))) {
+          if(role) actions.append(task('Cambiar mesa',()=>editRequest(id,row)));
           actions.append(task(role?'Eliminar solicitud':'Retirar solicitud',async()=>{
             if(!confirm('¿Eliminar la solicitud de la mesa '+row.mesa+'?')) return;
             await changeRequest(id,row,null);
@@ -301,6 +342,10 @@ export function mountTripFirebase(changed=()=>{}) {
           tickets.replaceChildren(...await Promise.all(comprobantes.map(showTicket)));
           tickets.hidden=false;
         }));
+        if(adminPage && staff() && claimsSection) actions.append(task('Escanear QR',()=>{
+          setAdminView('claims');
+          claimsSection.querySelector('#trip-claims-title').focus();
+        }));
         card.append(tickets);
       }
       listElement.append(card);
@@ -310,7 +355,7 @@ export function mountTripFirebase(changed=()=>{}) {
   function showUsers() {
     if(!adminPage) return;
     directory.replaceChildren();
-    if(!role) return;
+    if(!role || !profileComplete) return;
     const people=new Map();
     const counts=new Map();
     for(const [id,row] of Object.entries(rows)) {
@@ -395,12 +440,63 @@ export function mountTripFirebase(changed=()=>{}) {
     if(retryAccess) retryAccess.hidden=false;
   }
 
+  async function loadPending() {
+    const version=generation;
+    if(!adminPage || !seller || !profileComplete) return;
+    try {
+      const response=await qrRequest('tripVentas',{accion:'solicitudes'});
+      if(version!==generation || !seller || !profileComplete) return;
+      rows=response.solicitudes;
+      requestsReady=true;
+      showRequests();
+    } catch(error) {
+      if(version===generation) adminFeedback.textContent=error.message;
+    }
+  }
+
+  function fillProfile(profile) {
+    if(!personalForm) return;
+    personalForm.elements.nombre.value=profile?.nombre || '';
+    personalForm.elements.apellido.value=profile?.apellido || '';
+    personalForm.elements.carnet.value='';
+    personalForm.elements.carnet.required=!profile;
+    carnetHint.textContent=profile?'Carnet guardado · termina en '+profile.carnetFinal+'. Deja este campo vacío para conservarlo.':'Ingresa el número de carnet y su complemento si corresponde.';
+  }
+
+  function loadPersonal(account,version) {
+    stopPersonalFlag?.();
+    stopPersonalFlag=dbModule.onValue(dbModule.ref(db,'trip/fichasCompletas/'+account.uid),snapshot=>{
+      if(version!==generation) return;
+      profileComplete=snapshot.val()===true;
+      applyProfileAccess(account,version);
+    },error=>{
+      if(version!==generation) return;
+      profileComplete=false;
+      applyProfileAccess(account,version);
+      accessError('Firebase rechazó la consulta de tu perfil. TRIP debe publicar las reglas de trip/fichasCompletas.',error);
+    });
+    if(!personalSection) return;
+    personalSection.hidden=false;
+    personalForm.hidden=true;
+    personalStatus.textContent='Consultando tu perfil…';
+    qrRequest('tripPerfiles',{accion:'consultar'}).then(({perfil})=>{
+      if(version!==generation) return;
+      fillProfile(perfil);
+      personalForm.hidden=false;
+      personalStatus.textContent=perfil?'Tu carnet se guarda cifrado.':'Completa nombre, apellido y carnet para acceder a las funciones de tu cuenta.';
+    }).catch(error=>{if(version===generation) personalStatus.textContent=error.message;});
+  }
+
   function subscribeRequests() {
     stopRequests?.();
     requestsReady=false;
     rows={};
     showRequests();
-    if(!user?.emailVerified || (role && !adminPage) || (!role && adminPage)) return;
+    if(!profileComplete || !user?.emailVerified || (staff() && !adminPage) || (!staff() && adminPage)) return;
+    if(seller) {
+      void loadPending();
+      return;
+    }
     const all=dbModule.ref(db,'trip/solicitudes');
     const selected=role?all:dbModule.query(all,dbModule.orderByChild('uid'),dbModule.equalTo(user.uid));
     stopRequests=dbModule.onValue(selected,snapshot=>{
@@ -424,7 +520,7 @@ export function mountTripFirebase(changed=()=>{}) {
     blocksReady=profilesReady=false;
     blocks={};
     profiles={};
-    if((role && !adminPage) || (!role && adminPage)) return;
+    if(!profileComplete || seller || (role && !adminPage) || (!role && adminPage)) return;
     const blockPath=role?'trip/bloqueados':'trip/bloqueados/'+account.uid;
     stopBlocks=dbModule.onValue(dbModule.ref(db,blockPath),snapshot=>{
       if(version!==generation) return;
@@ -448,7 +544,7 @@ export function mountTripFirebase(changed=()=>{}) {
     } else if(panel==='cuenta' && !role) {
       const ref=dbModule.ref(db,'trip/usuarios/'+account.uid);
       stopProfiles=dbModule.onValue(ref,async snapshot=>{
-        if(version!==generation || role || snapshot.exists()) return;
+        if(version!==generation || staff() || snapshot.exists()) return;
         try {
           await dbModule.runTransaction(ref,current=>current===null?{correo:account.email}:undefined,{applyLocally:false});
         } catch(error) {
@@ -462,6 +558,7 @@ export function mountTripFirebase(changed=()=>{}) {
 
   function setAdminView(view) {
     if(view!=='claims') scanner?.reset();
+    if(view==='sales') void salesUI?.open();
     for(const button of adminSection.querySelectorAll('[data-admin-view]')) {
       const selected=button.dataset.adminView===view;
       button.setAttribute('aria-pressed',String(selected));
@@ -473,21 +570,54 @@ export function mountTripFirebase(changed=()=>{}) {
     showUsers();
   }
 
+  function applyProfileAccess(account,version) {
+    const unlocked=roleResolved && profileComplete;
+    adminOpen.hidden=!unlocked || !staff() || adminPage;
+    if(panel) {
+      adminSection.hidden=!unlocked || !adminPage || !staff();
+      if(adminPage) {
+        editor.hidden=true;
+        salesUI?.reset();
+        setAdminView('requests');
+      }
+    }
+    if(unlocked) {
+      subscribeRequests();
+      subscribeProfiles(account,version);
+    } else {
+      stopRequests?.();
+      stopBlocks?.();
+      stopProfiles?.();
+      blocksReady=profilesReady=requestsReady=false;
+      rows={};
+      blocks={};
+      profiles={};
+      showRequests();
+      showUsers();
+    }
+    changed();
+  }
+
   function showSession(account,forceToken=false) {
     scanner?.reset();
+    salesUI?.reset();
     user=account;
     const version=++generation;
     stopRole?.();
+    stopSeller?.();
+    stopPersonalFlag?.();
     stopRequests?.();
     stopBlocks?.();
     stopProfiles?.();
-    role=roleResolved=blocksReady=profilesReady=requestsReady=false;
+    role=seller=roleResolved=blocksReady=profilesReady=requestsReady=profileComplete=false;
     rows={};
     blocks={};
     profiles={};
     adminOpen.hidden=true;
     if(panel) {
       adminSection.hidden=editor.hidden=true;
+      if(personalSection) {personalSection.hidden=true;personalForm.reset();}
+      if(pendingRefresh) pendingRefresh.hidden=true;
       adminFeedback.textContent=accountFeedback.textContent='';
       searchRequest.value=searchUser.value=filterState.value='';
       showUsers();
@@ -512,31 +642,45 @@ export function mountTripFirebase(changed=()=>{}) {
       return;
     }
     if(version!==generation) return;
-    stopRole=dbModule.onValue(dbModule.ref(db,'trip/admins/'+account.uid),snapshot=>{
-      if(version!==generation) return;
-      role=snapshot.val()===true;
+    let adminValue,sellerValue;
+    function applyRoles() {
+      if(version!==generation || adminValue===undefined || sellerValue===undefined) return;
+      const initial=!roleResolved;
+      const changedRole=role!==adminValue || seller!==(!adminValue && sellerValue);
+      if(!initial && !changedRole) return;
+      role=adminValue;
+      seller=!role && sellerValue;
       roleResolved=true;
-      adminOpen.hidden=!role || adminPage;
       if(panel) {
-        adminSection.hidden=!adminPage || !role;
-        if(!role && adminPage) {
-          editor.hidden=true;
-          scanner?.reset();
-        }
+        for(const button of adminSection.querySelectorAll('[data-admin-only]')) button.hidden=!role;
+        if(pendingRefresh) pendingRefresh.hidden=!seller;
       }
       status.textContent=role?'Sesión de administración · '+user.email:
-        adminPage?'Esta cuenta no tiene permisos de administración.':'Cuenta de '+user.email;
-      subscribeRequests();
-      subscribeProfiles(user,version);
-      changed();
-    },error=>{
+        seller?'Sesión de relacionador · '+user.email:
+        adminPage?'Esta cuenta no tiene permisos para el panel de TRIP.':'Cuenta de '+user.email;
+      if(initial) loadPersonal(account,version);
+      else applyProfileAccess(account,version);
+    }
+    function onRoleError(error) {
       if(version!==generation) return;
       if(!forceToken && isPermissionDenied(error)) {
+        stopRole?.();
+        stopSeller?.();
         watchRole(account,version,true);
         return;
       }
-      accessError('Tu sesión está iniciada, pero Firebase rechazó la lectura del rol. TRIP debe revisar la regla de lectura de trip/admins/$uid.',error);
-    });
+      role=seller=roleResolved=false;
+      applyProfileAccess(account,version);
+      accessError('Firebase rechazó la consulta de permisos de la cuenta.',error);
+    }
+    stopRole=dbModule.onValue(dbModule.ref(db,'trip/admins/'+account.uid),snapshot=>{
+      adminValue=snapshot.val()===true;
+      applyRoles();
+    },onRoleError);
+    stopSeller=dbModule.onValue(dbModule.ref(db,'trip/relacionadores/'+account.uid),snapshot=>{
+      sellerValue=snapshot.val()===true;
+      applyRoles();
+    },onRoleError);
   }
 
   if(panel) {
@@ -548,6 +692,24 @@ export function mountTripFirebase(changed=()=>{}) {
     filterState.addEventListener('change',showRequests);
     searchUser.addEventListener('input',showUsers);
     form.addEventListener('submit',submit);
+    pendingRefresh?.addEventListener('click',loadPending);
+    personalForm?.addEventListener('submit',async event=>{
+      event.preventDefault();
+      const version=generation;
+      const button=event.submitter;
+      button.disabled=true;
+      try {
+        const fields=Object.fromEntries(new FormData(personalForm));
+        const {perfil}=await qrRequest('tripPerfiles',{accion:'guardar',...fields});
+        if(version!==generation) return;
+        fillProfile(perfil);
+        personalStatus.textContent='Perfil guardado.';
+      } catch(error) {
+        if(version===generation) personalStatus.textContent=error.message;
+      } finally {
+        button.disabled=false;
+      }
+    });
     if(adminPage) form.querySelector('[value=register]').hidden=true;
     const target=new URLSearchParams(location.search);
     if(Object.hasOwn(events,target.get('evento')) && /^([1-9]|[1-7][0-9]|8[0-4])$/.test(target.get('mesa') || '')) {
@@ -612,6 +774,7 @@ export function mountTripFirebase(changed=()=>{}) {
       dbModule.onValue(publicMap,snapshot=>{
         occupancyReady=true;
         occupied=snapshot.val() || {};
+        salesUI?.tables();
         const mapNotice=document.querySelector('#map-notice');
         if(mapNotice) mapNotice.textContent='El mapa muestra las mesas que TRIP ya confirmó.';
         showRequests();
@@ -630,6 +793,7 @@ export function mountTripFirebase(changed=()=>{}) {
   initialize();
   return {
     confirmed,requested,ready,
+    needsProfile:()=>Boolean(user?.emailVerified && roleResolved && !profileComplete),
     blocked:()=>Boolean(user && blocks[user.uid]===true),
     async request(night,seat) {
       if(!ready()) throw new Error('Inicia sesión con tu correo verificado y revisa tu conexión.');

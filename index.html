@@ -54,7 +54,7 @@
 <section class="section lounge-section" id="lounges">
   <div class="wrap">
     <div class="heading"><div><p class="eyebrow">02 / RESERVAS</p><h2>ELIGE TU LOUNGE<span>.</span></h2></div><p>Elige tu mesa en el plano y revisa el precio de su zona.</p></div>
-    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="#mapa">Ver plano de mesas</a><a id="trip-account" class="button ghost" href="./cuenta.html">Mi cuenta</a><a id="trip-admin-open" class="button solid" href="./administracion.html" hidden>Panel de administración</a></div></div>
+    <div class="lounge-nav"><div class="tabs" role="tablist" aria-label="Noche del evento"><button id="tab-viernes" type="button" role="tab" aria-selected="true" aria-controls="lounge-panel" data-tab="viernes">Vie 13 <span>· Festi Cumbia</span></button><button id="tab-sabado" type="button" role="tab" aria-selected="false" aria-controls="lounge-panel" tabindex="-1" data-tab="sabado">Sáb 14 <span>· Rodeó Fest</span></button></div><div class="actions"><a class="button ghost" href="#mapa">Ver plano de mesas</a><a id="trip-account" class="button ghost" href="./cuenta.html">Mi cuenta</a><a id="trip-admin-open" class="button solid" href="./administracion.html" hidden>Panel de TRIP</a></div></div>
     <div id="lounge-panel" role="tabpanel" aria-labelledby="tab-viernes" tabindex="0">
       <p id="lounge-note"></p>
       <section id="mapa" class="venue-map" aria-labelledby="map-title">
@@ -105,7 +105,7 @@
 <script type="module">
 import {events} from './public/catalog.js';
 import {floorPlan} from './public/plan.js';
-import {mountTripFirebase} from './firebase-trip.js';
+import {mountTripFirebase} from './firebase-trip.js?v=ventas-2';
 let booking;
 const {setMapNight, focusZone, refreshBookingView} = (() => {
   const venue = document.querySelector('#mapa');
@@ -196,7 +196,7 @@ const {setMapNight, focusZone, refreshBookingView} = (() => {
           });
           card.append(reserve);
         } else {
-          const access = element('a','Abrir mi cuenta','button ghost');
+          const access = element('a',booking?.needsProfile()?'Completar perfil':'Abrir mi cuenta','button ghost');
           access.href='./cuenta.html?'+new URLSearchParams({evento:night,mesa:String(table.number)});
           card.append(access);
         }

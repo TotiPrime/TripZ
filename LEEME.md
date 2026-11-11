@@ -1,57 +1,51 @@
-# TripZ · QR con Firebase Spark
+# TripZ · Ventas, perfiles y reclamos automáticos
 
-La web sigue en GitHub Pages y las cuentas, solicitudes y canjes se mantienen en el proyecto Firebase `trip-76b7e`. El backend de QR se ejecuta en Cloudflare Workers Free. Esta edición no usa Cloud Functions ni Secret Manager de Google.
+Este ZIP actualiza el sitio existente de `TotiPrime/TripZ` y el Worker `tripz-qr`. Usa Firebase Spark, Cloudflare Workers Free y el proyecto `trip-76b7e`.
 
-## 1. Crear una identidad para el Worker
+## Instalar la actualización
 
-1. Abre [Google Cloud → Cuentas de servicio de trip-76b7e](https://console.cloud.google.com/iam-admin/serviceaccounts?project=trip-76b7e) con la cuenta dueña del proyecto.
-2. Crea una cuenta de servicio llamada `tripz-qr-worker`. Asígnale **Firebase Realtime Database Admin** y **Firebase Authentication Viewer**. Puedes buscarlos por los identificadores `roles/firebasedatabase.admin` y `roles/firebaseauth.viewer`. El Worker necesita leer y escribir el estado de la reserva y consultar si el usuario de Firebase sigue activo. Usa solo esos roles y no le asignes el rol de propietario.
-3. En la cuenta creada, entra a **Claves → Agregar clave → Crear clave nueva → JSON**. Guarda la descarga fuera de la carpeta del proyecto, por ejemplo `Descargas\tripz-worker.private.json`. Este JSON es una credencial privada de servidor. Súbela únicamente al secreto de Cloudflare en el siguiente paso.
-4. Firebase Authentication suele tener activa la API Identity Toolkit. Si el Worker indica que esa API está deshabilitada, ábrela en la [biblioteca de APIs del proyecto](https://console.cloud.google.com/apis/library/identitytoolkit.googleapis.com?project=trip-76b7e).
+1. En tu PC, reemplaza los archivos de la carpeta `servicio-qr` que ya usas por los archivos de `servicio-qr` de este ZIP. Desde esa carpeta ejecuta en PowerShell:
 
-## 2. Desplegar en Cloudflare Free
+   ```powershell
+   npm.cmd ci
+   npx.cmd wrangler deploy
+   ```
 
-Crea o abre una [cuenta de Cloudflare](https://dash.cloudflare.com/) y usa **Workers Free**. Abre PowerShell en la carpeta `servicio-qr` del ZIP extraído y ejecuta:
+   El Worker usa los secretos existentes `FIREBASE_SERVICE_ACCOUNT` y `TRIP_QR_KEY`. Conserva el valor de la clave para que los QR emitidos y los perfiles cifrados sigan siendo recuperables. El ZIP contiene código y configuración pública.
 
-```powershell
-npm.cmd ci
-npx.cmd wrangler login
-npx.cmd wrangler deploy
+2. En [Firebase → Realtime Database → Reglas](https://console.firebase.google.com/project/trip-76b7e/database/trip-76b7e-default-rtdb/rules), publica el contenido completo de `database.rules.json` incluido. Ese archivo protege los datos personales y el historial, permite consultar el rol propio y reserva los cambios de mesa al administrador.
+3. En [GitHub → TotiPrime/TripZ → main](https://github.com/TotiPrime/TripZ/upload/main), sube **el contenido de la carpeta `github-pages`**, conservando las rutas. La URL pública del Worker ya viene en `qr-config.js`. Después del despliegue, vuelve a abrir Administración o Mi cuenta y recarga la página.
+
+## Relacionadores
+
+Crea o reutiliza una cuenta verificada en Firebase Authentication. En **Realtime Database → Datos**, registra el UID exacto así:
+
+```text
+trip
+  relacionadores
+    UID_DE_LA_CUENTA: true
 ```
 
-Autoriza Wrangler en el navegador. Si Cloudflare pide un subdominio `workers.dev`, configúralo en **Workers & Pages**. Copia la URL HTTPS que muestra Wrangler después del despliegue.
+Usa un booleano. Las cuentas administradoras conservan su permiso en `trip/admins/UID`. Si una cuenta figura en los dos grupos, prevalece el rol administrador. Abre [Administración TRIP](https://totiprime.github.io/TripZ/administracion.html) con la cuenta del relacionador, completa su perfil y entra a **Ventas** o **Reclamos QR**.
 
-Guarda la credencial de servicio como secreto. Cambia la ruta del ejemplo por el nombre real de tu archivo:
+- **Relacionador.** Confirma solicitudes pendientes con un método de pago o registra una venta directa a un cliente con cuenta verificada y perfil completo. Consulta su propio historial y canjea QR. Las ediciones de solicitudes y las anulaciones pertenecen al administrador.
+- **Administrador.** Además puede ver las ventas de todo el equipo, editar o eliminar solicitudes sin confirmar, anular reservas sin canjes y cambiar una reserva confirmada a otra mesa disponible del mismo evento y tarifa antes de que se use algún QR. Al moverla se invalidan los QR anteriores y se generan los de la nueva mesa.
+- **Cliente.** Consulta sus solicitudes y reservas, abre sus QR y puede retirar una solicitud sin confirmar. El cambio de mesa lo realiza un administrador.
 
-```powershell
-Get-Content "$env:USERPROFILE\Downloads\tripz-worker.private.json" -Raw | npx.cmd wrangler secret put FIREBASE_SERVICE_ACCOUNT
-```
+**Perfil obligatorio para los tres roles.** Después de verificar el correo, guarda nombre, apellido y carnet en **Mi perfil**. Las reservas, solicitudes, ventas y reclamos quedan bloqueados hasta guardar los tres campos. Esto también se aplica a las cuentas existentes. El mapa público sigue disponible. Si una solicitud anterior pertenece a un cliente con perfil pendiente, el cliente debe completarlo antes de que el equipo pueda confirmar el pago.
 
-Si la edición anterior nunca llegó a emitir QR, genera una clave nueva y guárdala en el segundo secreto, sin mostrarla en la terminal:
+## Ventas y datos personales
 
-```powershell
-node -p "require('node:crypto').randomBytes(32).toString('hex')" | npx.cmd wrangler secret put TRIP_QR_KEY
-```
+- **Ventas** registra quién confirmó la mesa, su rol, el evento, la mesa, la tarifa, el cliente, el método de pago, la referencia opcional, fecha y hora de Bolivia, estado e historial de anulaciones o cambios. La confirmación registra un pago comprobado por el equipo de TRIP.
+- El historial contiene las ventas registradas desde que se activó esta función. Las reservas anteriores conservan los QR válidos de sus beneficios. Si falta un comprobante, se genera al pulsar **Ver o actualizar QR**. Las reservas creadas antes del registro de ventas quedan sin atribución de vendedor ni método de pago.
+- El carnet se cifra en el Worker y se guarda en Firebase en un bloque privado. El formulario muestra únicamente su terminación al titular y el historial de ventas excluye el carnet. Cualquier cambio del nombre de una cuenta se refleja en ventas futuras.
 
-Si ya emitiste QR con otra instalación, usa **la misma clave privada** en el secreto `TRIP_QR_KEY` para conservar su validez. Guarda un respaldo privado. El formato de la clave es hexadecimal de 64 caracteres.
+## Canje automático
 
-Abre la URL del Worker seguida de `/salud`. Debe mostrar `"ok":true`. Esa ruta comprueba la configuración de los secretos. La conexión a Firebase se prueba al consultar una reserva con sesión.
+1. Ve a **Reclamos QR → Activar cámara** y apunta al QR.
+2. Revisa la mesa, evento y beneficio que detectó TripZ. Verás **Válido para consumo**, **Válido para combo** o **Válido para manillas**.
+3. Pulsa **RECLAMADO** al entregar el beneficio. Cada QR corresponde a un solo canje y el historial conserva quién lo canjeó y cuándo. El número de mesa aparece en cada comprobante.
 
-## 3. Conectar GitHub Pages y Firebase
+Si la edición anterior emitió un QR de ingreso a la mesa, queda deshabilitado. Su historial se conserva.
 
-1. En la carpeta principal del ZIP, abre `qr-config.js`. Sustituye las comillas vacías por la URL real que mostró Wrangler, por ejemplo `export const qrApiBase = 'https://tripz-qr.tu-subdominio.workers.dev';`.
-2. En [TotiPrime/TripZ, rama main](https://github.com/TotiPrime/TripZ/upload/main), sube el `qr-config.js` editado, `firebase-trip.js` y `public/qr-browser.js` en sus rutas originales. Esos tres archivos bastan si ya publicaste las páginas separadas de la edición QR. Para una instalación completa, sube también los HTML, `panel-trip.js`, `firebase-config.js` y la carpeta `public`. La carpeta `servicio-qr` se usa para desplegar el Worker.
-3. En [Firebase → Realtime Database → Reglas](https://console.firebase.google.com/project/trip-76b7e/database/trip-76b7e-default-rtdb/rules), publica el contenido completo de `database.rules.json`. Si ya publicaste las reglas del paquete QR anterior, puedes conservarlas. Verifica que `mesas` tenga `.write: false` y que `qrActivos`, `qrHistorial` y `canjeadores` sean privados.
-4. Entra a **Administración** en TripZ con una cuenta verificada. Confirma una solicitud de prueba y desde **Mi cuenta** pulsa **Ver o actualizar QR**. Una reserva ya confirmada recibe los QR al abrir esa opción si todavía no los tiene.
-
-## Canje desde App Inventor
-
-El endpoint es `URL_DEL_WORKER/tripCanjes`. Envía un POST JSON con el encabezado `Authorization: Bearer <ID_TOKEN_FIREBASE>`. La cuenta debe ser una administradora verificada o estar habilitada en `trip/canjeadores/UID` con valor booleano `true`.
-
-```json
-{"accion":"validar","tipo":"manillas","codigo":"<texto completo del lector QR>"}
-```
-
-Usa `"tipo":"consumo"` en el puesto de consumo. La operación `validar` muestra mesa y beneficio sin reclamarlo. Para entregarlo, envía `"accion":"canjear"`. Entrega solo si la respuesta indica `ok: true` y `estado: "reclamado"`. Si el código ya se usó, el servidor devuelve `409` con `code: "qr_reclamado"`. El historial queda en Firebase.
-
-El consumo del viernes corresponde al saldo según mesa. El sábado incluye un combo y un QR aparte para las cinco manillas. Los QR siguen cifrados con AES-256-GCM y se canjean en una sola operación condicional de Firebase, aunque dos lectores envíen el mismo código a la vez.
+Para App Inventor, el POST a `/tripCanjes` usa el encabezado `Authorization: Bearer <ID_TOKEN_FIREBASE>` y el JSON `{"accion":"validar","codigo":"<QR>"}`. Usa `"accion":"canjear"` para confirmar la entrega. El tipo es opcional y el Worker lo obtiene del comprobante. Los clientes antiguos pueden seguir enviando un tipo explícito.
