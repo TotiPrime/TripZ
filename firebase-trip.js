@@ -1,7 +1,7 @@
 import { firebaseConfig } from './firebase-config.js';
 import { qrApiBase } from './qr-config.js';
-import { mountClaims } from './public/reclamos.js?v=ventas-2';
-import { mountSales, paymentFields } from './public/ventas-ui.js?v=ventas-2';
+import { mountClaims } from './public/reclamos.js?v=ventas-5';
+import { mountSales, paymentFields } from './public/ventas-ui.js?v=ventas-5';
 import { events } from './public/catalog.js';
 import { floorPlan } from './public/plan.js';
 
@@ -45,7 +45,6 @@ export function mountTripFirebase(changed=()=>{}) {
   const personalForm=document.querySelector('#trip-profile-form');
   const personalStatus=document.querySelector('#trip-profile-status');
   const carnetHint=document.querySelector('#trip-profile-carnet');
-  const pendingRefresh=document.querySelector('#trip-refresh-pending');
   let authModule,dbModule,auth,db,user;
   let role=false,connected=false,occupancyReady=false,requestsReady=false,occupied={},rows={};
   let seller=false,profileComplete=false;
@@ -60,7 +59,7 @@ export function mountTripFirebase(changed=()=>{}) {
 
   const salesSection=adminPage && document.querySelector('#trip-admin-sales');
   const salesUI=salesSection?mountSales(salesSection,input=>qrRequest('tripVentas',input),{
-    isAdmin:()=>role,occupied:confirmed,onRegistered:()=>{if(seller) void loadPending();},formatDate:value=>orderDate.format(value)
+    isAdmin:()=>role,occupied:confirmed,formatDate:value=>orderDate.format(value)
   }):null;
 
   function staff() {return role || seller;}
@@ -104,6 +103,7 @@ export function mountTripFirebase(changed=()=>{}) {
     if(!occupancyReady) return ['unknown','Disponibilidad sin verificar','Vuelve a conectarte para consultar el estado de la mesa.'];
     const active=occupied[row.evento]?.[row.mesa];
     if(active===id) return ['confirmed','Reserva confirmada','TRIP confirmó el pago y asignó esta mesa a tu solicitud.'];
+    if(row.invitado || row.origen==='directa') return ['cancelled','Venta anulada','Consulta el historial de esta venta en Ventas.'];
     if(active) return ['unavailable','Mesa ocupada','TRIP asignó esta mesa a otra solicitud. Puedes elegir otra mesa disponible.'];
     return ['sent','Solicitud enviada','La mesa sigue disponible hasta que TRIP confirme el pago.'];
   }
@@ -233,7 +233,6 @@ export function mountTripFirebase(changed=()=>{}) {
     edit('Registrar pago de la mesa '+row.mesa,paymentFields(),async()=>{
       const payment=Object.fromEntries(new FormData(editorForm));
       await reservationAPI('confirmar',id,row,payment);
-      if(seller) void loadPending();
       notify('Venta confirmada. El cliente puede ver sus QR.');
     });
   }
@@ -250,7 +249,8 @@ export function mountTripFirebase(changed=()=>{}) {
     }
     edit('Cambiar mesa confirmada',[field('Otra mesa de la misma tarifa',target)],async()=>{
       await reservationAPI('mover',id,row,{nuevaMesa:target.value});
-      notify('Mesa cambiada. El cliente puede abrir los QR de la nueva mesa.');
+      if(row.invitado) notify('Mesa cambiada. Los QR actualizados están disponibles en esta reserva.');
+      else notify('Mesa cambiada. El cliente puede abrir los QR de la nueva mesa.');
     });
   }
 
@@ -285,7 +285,7 @@ export function mountTripFirebase(changed=()=>{}) {
       requests.append(link);
       return;
     }
-    if(!staff() && adminPage) return;
+    if(adminPage && !role) return;
     const listElement=adminPage?adminOrders:requests;
     if(!adminPage) listElement.append(node('h2','Mis solicitudes y reservas'));
     if(!requestsReady) {
@@ -311,11 +311,11 @@ export function mountTripFirebase(changed=()=>{}) {
       const date=orderDate.format(row.creada);
       card.append(header,node('p','Tarifa de la mesa · '+zone[2]+' Bs'),node('p',zone[3],'order-meta'),
         node('p',description),node('p','Enviada el '+date+' · Referencia '+id,'order-meta'));
-      if(staff()) card.append(node('p','Cliente · '+row.correo,'order-meta'));
+      if(staff()) card.append(node('p',(row.invitado?'Cliente sin cuenta':'Cliente')+' · '+row.correo,'order-meta'));
       const actions=node('div','','actions');
       actions.append(mapLink(row));
       if(connected && occupancyReady) {
-        if(staff() && state==='sent' && (seller || blocksReady) && blocks[row.uid]!==true) {
+        if(role && state==='sent' && blocksReady && blocks[row.uid]!==true) {
           actions.append(task('Registrar pago y confirmar',()=>recordPayment(id,row)));
         }
         if(role && state==='confirmed') actions.append(task('Cambiar mesa',()=>moveConfirmed(id,row)));
@@ -325,7 +325,7 @@ export function mountTripFirebase(changed=()=>{}) {
           notify('Mesa liberada. Los QR anteriores quedaron anulados.');
         }));
         if(state!=='confirmed' && (role || (!staff() && blocksReady))) {
-          if(role) actions.append(task('Cambiar mesa',()=>editRequest(id,row)));
+          if(role && state!=='cancelled') actions.append(task('Cambiar mesa',()=>editRequest(id,row)));
           actions.append(task(role?'Eliminar solicitud':'Retirar solicitud',async()=>{
             if(!confirm('¿Eliminar la solicitud de la mesa '+row.mesa+'?')) return;
             await changeRequest(id,row,null);
@@ -359,6 +359,7 @@ export function mountTripFirebase(changed=()=>{}) {
     const people=new Map();
     const counts=new Map();
     for(const [id,row] of Object.entries(rows)) {
+      if(row.invitado) continue;
       counts.set(row.uid,(counts.get(row.uid) || 0)+1);
       if(!people.has(row.uid)) people.set(row.uid,{correo:row.correo,solicitud:id});
     }
@@ -440,20 +441,6 @@ export function mountTripFirebase(changed=()=>{}) {
     if(retryAccess) retryAccess.hidden=false;
   }
 
-  async function loadPending() {
-    const version=generation;
-    if(!adminPage || !seller || !profileComplete) return;
-    try {
-      const response=await qrRequest('tripVentas',{accion:'solicitudes'});
-      if(version!==generation || !seller || !profileComplete) return;
-      rows=response.solicitudes;
-      requestsReady=true;
-      showRequests();
-    } catch(error) {
-      if(version===generation) adminFeedback.textContent=error.message;
-    }
-  }
-
   function fillProfile(profile) {
     if(!personalForm) return;
     personalForm.elements.nombre.value=profile?.nombre || '';
@@ -492,11 +479,7 @@ export function mountTripFirebase(changed=()=>{}) {
     requestsReady=false;
     rows={};
     showRequests();
-    if(!profileComplete || !user?.emailVerified || (staff() && !adminPage) || (!staff() && adminPage)) return;
-    if(seller) {
-      void loadPending();
-      return;
-    }
+    if(!profileComplete || !user?.emailVerified || (adminPage ? !role : staff())) return;
     const all=dbModule.ref(db,'trip/solicitudes');
     const selected=role?all:dbModule.query(all,dbModule.orderByChild('uid'),dbModule.equalTo(user.uid));
     stopRequests=dbModule.onValue(selected,snapshot=>{
@@ -578,7 +561,7 @@ export function mountTripFirebase(changed=()=>{}) {
       if(adminPage) {
         editor.hidden=true;
         salesUI?.reset();
-        setAdminView('requests');
+        setAdminView(unlocked && seller?'sales':'requests');
       }
     }
     if(unlocked) {
@@ -617,7 +600,6 @@ export function mountTripFirebase(changed=()=>{}) {
     if(panel) {
       adminSection.hidden=editor.hidden=true;
       if(personalSection) {personalSection.hidden=true;personalForm.reset();}
-      if(pendingRefresh) pendingRefresh.hidden=true;
       adminFeedback.textContent=accountFeedback.textContent='';
       searchRequest.value=searchUser.value=filterState.value='';
       showUsers();
@@ -653,7 +635,6 @@ export function mountTripFirebase(changed=()=>{}) {
       roleResolved=true;
       if(panel) {
         for(const button of adminSection.querySelectorAll('[data-admin-only]')) button.hidden=!role;
-        if(pendingRefresh) pendingRefresh.hidden=!seller;
       }
       status.textContent=role?'Sesión de administración · '+user.email:
         seller?'Sesión de relacionador · '+user.email:
@@ -692,7 +673,6 @@ export function mountTripFirebase(changed=()=>{}) {
     filterState.addEventListener('change',showRequests);
     searchUser.addEventListener('input',showUsers);
     form.addEventListener('submit',submit);
-    pendingRefresh?.addEventListener('click',loadPending);
     personalForm?.addEventListener('submit',async event=>{
       event.preventDefault();
       const version=generation;

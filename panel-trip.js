@@ -1,4 +1,4 @@
-import {mountTripFirebase} from './firebase-trip.js?v=ventas-2';
+import {mountTripFirebase} from './firebase-trip.js?v=ventas-5';
 
 document.querySelector('#trip-panel-content').innerHTML = `<section id="trip-access" class="panel-section" aria-label="Sesión de TRIP">
 <p id="trip-access-status" role="status"></p>
@@ -32,11 +32,10 @@ document.querySelector('#trip-panel-content').innerHTML = `<section id="trip-acc
 </div>
 </section>
 <section id="trip-admin" class="panel-section" aria-label="Gestión de TRIP" hidden>
-<div class="actions"><button type="button" class="button solid" data-admin-view="requests" aria-pressed="true">Solicitudes</button><button type="button" class="button ghost" data-admin-view="users" aria-pressed="false" data-admin-only>Usuarios</button><button type="button" class="button ghost" data-admin-view="claims" aria-pressed="false">Reclamos QR</button><button type="button" class="button ghost" data-admin-view="sales" aria-pressed="false">Ventas</button></div>
+<div class="actions"><button type="button" class="button solid" data-admin-view="requests" aria-pressed="true" data-admin-only>Solicitudes</button><button type="button" class="button ghost" data-admin-view="users" aria-pressed="false" data-admin-only>Usuarios</button><button type="button" class="button ghost" data-admin-view="claims" aria-pressed="false">Reclamos QR</button><button type="button" class="button ghost" data-admin-view="sales" aria-pressed="false">Ventas</button></div>
 <p id="trip-admin-feedback" class="trip-feedback" role="status"></p>
 <section id="trip-admin-requests">
 <div class="trip-tools"><label>Buscar solicitud <input id="trip-search-request" type="search" placeholder="Correo, mesa o referencia"></label><label>Estado <select id="trip-request-state"><option value="">Todos</option><option value="sent">Solicitud enviada</option><option value="confirmed">Reserva confirmada</option><option value="unavailable">Mesa ocupada</option></select></label></div>
-<div class="actions"><button id="trip-refresh-pending" type="button" class="button ghost" hidden>Actualizar solicitudes</button></div>
 <div id="trip-admin-orders" class="trip-list"></div>
 </section>
 <section id="trip-admin-users" hidden>
@@ -65,7 +64,8 @@ document.querySelector('#trip-panel-content').innerHTML = `<section id="trip-acc
 <details class="my-order">
 <summary>Registrar venta directa</summary>
 <form id="trip-direct-sale" class="trip-edit">
-<label>Correo de la cuenta del cliente <input name="clienteCorreo" type="email" required maxlength="254"></label>
+<label>Correo de la cuenta del cliente <input name="clienteCorreo" type="email" required maxlength="254" aria-describedby="trip-sale-email-alert"></label>
+<p id="trip-sale-email-alert" class="trip-feedback" role="alert"></p>
 <label>Evento <select name="evento" required></select></label>
 <label>Mesa disponible <select name="mesa" required></select></label>
 <div id="trip-sale-payment" class="trip-tools"></div>
