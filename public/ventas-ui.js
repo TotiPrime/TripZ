@@ -27,7 +27,7 @@ export function paymentFields() {
   return [methodLabel,referenceLabel];
 }
 
-export function mountSales(section,request,{isAdmin,occupied,onRegistered,formatDate}) {
+export function mountSales(section,request,{isAdmin,occupied,formatDate}) {
   const scope=section.querySelector('#trip-sale-scope');
   const scopeLabel=section.querySelector('#trip-sale-scope-label');
   const search=section.querySelector('#trip-sale-search');
@@ -35,6 +35,8 @@ export function mountSales(section,request,{isAdmin,occupied,onRegistered,format
   const list=section.querySelector('#trip-sales-list');
   const refresh=section.querySelector('#trip-sales-refresh');
   const form=section.querySelector('#trip-direct-sale');
+  const email=form.elements.namedItem('clienteCorreo');
+  const emailAlert=form.querySelector('#trip-sale-email-alert');
   const event=form.elements.namedItem('evento');
   const table=form.elements.namedItem('mesa');
   const submit=form.querySelector('button[type=submit]');
@@ -98,6 +100,11 @@ export function mountSales(section,request,{isAdmin,occupied,onRegistered,format
   }
 
   form.addEventListener('input',()=>{operation=undefined;});
+  function clearEmailAlert() {
+    emailAlert.textContent='';
+    email.removeAttribute('aria-invalid');
+  }
+  email.addEventListener('input',clearEmailAlert);
   event.addEventListener('change',tables);
   scope.addEventListener('change',open);
   search.addEventListener('input',render);
@@ -106,6 +113,7 @@ export function mountSales(section,request,{isAdmin,occupied,onRegistered,format
     submitEvent.preventDefault();
     const version=sequence;
     const values=Object.fromEntries(new FormData(form));
+    clearEmailAlert();
     operation??=crypto.randomUUID();
     submit.disabled=true;
     feedback.textContent='Registrando venta…';
@@ -114,13 +122,21 @@ export function mountSales(section,request,{isAdmin,occupied,onRegistered,format
       if(version!==sequence) return;
       form.reset();
       operation=undefined;
-      onRegistered();
       const refresh=open();
       const refreshed=sequence;
       await refresh;
-      if(refreshed===sequence) feedback.textContent='Venta confirmada · Referencia '+response.solicitud+'.';
+      if(refreshed===sequence) {
+        feedback.textContent='Venta confirmada · Referencia '+response.solicitud+'.';
+      }
     } catch(error) {
-      if(version===sequence) feedback.textContent=error.message;
+      if(version!==sequence) return;
+      if(error.qrCode==='cliente_sin_cuenta') {
+        feedback.textContent='';
+        if(email.value.trim()!==values.clienteCorreo.trim()) return;
+        email.setAttribute('aria-invalid','true');
+        emailAlert.textContent=error.message;
+        email.focus();
+      } else feedback.textContent=error.message;
     } finally {
       submit.disabled=false;
     }
@@ -133,6 +149,7 @@ export function mountSales(section,request,{isAdmin,occupied,onRegistered,format
     scope.value='mias';
     search.value='';
     feedback.textContent='';
+    clearEmailAlert();
     form.reset();
     list.replaceChildren();
   }};
